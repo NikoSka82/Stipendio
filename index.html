@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stipendio PRO V3</title>
+    <title>Stipendio PRO</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -18,9 +18,8 @@
         input, select, textarea { width: 100%; padding: 12px; margin: 5px 0; background: #161b33; border: 1px solid #34495e; color: white; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
         .btn-blue { background: var(--accent); } .btn-green { background: var(--green); } .btn-red { background: var(--red); }
-        .delete-btn { background: var(--red); color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; }
+        .delete-btn { background: var(--red); color: white; border: none; border-radius: 5px; padding: 4px 8px; cursor: pointer; float: right; }
         #netto-big { font-size: 38px; text-align: center; color: var(--green); font-weight: bold; margin: 15px 0; }
-        canvas { max-width: 100%; height: auto !important; }
     </style>
 </head>
 <body>
@@ -36,7 +35,7 @@
         <input type="number" id="t" placeholder="Ore Trasferta (20€)" oninput="cal()">
         <input type="number" id="k" value="102.30" oninput="cal()">
         <div id="extra-area"></div>
-        <button class="btn" style="background:transparent; border:1px dashed var(--accent); color:var(--accent);" onclick="addEx()">+ EXTRA / PREMI / TRASFERTE</button>
+        <button class="btn" style="background:transparent; border:1px dashed var(--accent); color:var(--accent);" onclick="addEx()">+ EXTRA / NOTE</button>
         <div id="netto-big">€ 0,00</div>
         <button class="btn btn-green" onclick="saveS()">💾 SALVA IN ARCHIVIO</button>
         <button class="btn btn-red" style="opacity:0.7" onclick="pulisci()">🧹 PULISCI TUTTO</button>
@@ -64,16 +63,15 @@
 </div>
 
 <div id="stats" class="page">
-    <h2 style="text-align:center;">📈 ANDAMENTO</h2>
+    <h2 style="text-align:center;">📈 STATS</h2>
     <div class="card"><canvas id="myChart"></canvas></div>
 </div>
 
 <div id="setup" class="page">
     <h2 style="text-align:center;">⚙️ SETUP</h2>
     <div class="card">
-        <h3>🏠 Spese Fisse</h3>
-        <p style="font-size:11px; color:#bdc3c7;">Formato: Importo|Nome|Inizio(AAAA-MM)|Fine(AAAA-MM)</p>
-        <textarea id="fisse" style="height:120px;" placeholder="550|Affitto|2026-01|2026-12"></textarea>
+        <h3>🏠 Spese Fisse (Importo|Nome|Inizio|Fine)</h3>
+        <textarea id="fisse" style="height:120px;" placeholder="Esempio: 500|Affitto|Gennaio|Dicembre"></textarea>
         <button class="btn btn-blue" onclick="saveF()">💾 SALVA FISSI</button>
     </div>
     <div class="card">
@@ -106,11 +104,8 @@
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
         el.classList.add('active');
-        if(id==='archivio') renderS(); 
-        if(id==='spese') renderV(); 
-        if(id==='bilancio') renderB();
-        if(id==='stats') initChart();
-        if(id==='setup') document.getElementById('fisse').value = db.f;
+        if(id==='archivio') renderS(); if(id==='spese') renderV(); if(id==='bilancio') renderB();
+        if(id==='stats') initChart(); if(id==='setup') document.getElementById('fisse').value = db.f;
     }
 
     function addEx() {
@@ -127,28 +122,19 @@
         return res;
     }
 
-    function saveS() {
-        db.s.push({m:document.getElementById('m').value, a:document.getElementById('a').value, v:cal(), id:Date.now()});
-        up(); alert("Stipendio salvato!");
-    }
-
-    function addV() {
-        const v=parseFloat(document.getElementById('sv').value)||0, n=document.getElementById('sn').value||"Spesa";
-        if(v>0){ db.v.push({v,n,m:document.getElementById('m').value,id:Date.now()}); up(); renderV(); }
-    }
-
+    function saveS() { db.s.push({m:document.getElementById('m').value, a:document.getElementById('a').value, v:cal(), id:Date.now()}); up(); alert("Salvato!"); }
+    function addV() { const v=parseFloat(document.getElementById('sv').value)||0, n=document.getElementById('sn').value||"Spesa"; if(v>0){ db.v.push({v,n,id:Date.now()}); up(); renderV(); } }
     function delV(id) { db.v = db.v.filter(x=>x.id!==id); up(); renderV(); }
-    function delS(id) { if(confirm("Eliminare questo mese?")){ db.s = db.s.filter(x=>x.id!==id); up(); renderS(); }}
-
+    function delS(id) { if(confirm("Eliminare?")){ db.s = db.s.filter(x=>x.id!==id); up(); renderS(); }}
     function saveF() { db.f = document.getElementById('fisse').value; up(); alert("Fissi salvati!"); }
     function up() { localStorage.setItem('stip_db_v3', JSON.stringify(db)); }
 
     function renderV() {
-        document.getElementById('list-v').innerHTML = db.v.map(x=>`<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>${x.n}</b><br><small>${x.m}</small></div><div><span style="color:var(--red); margin-right:10px;">-€${x.v.toFixed(2)}</span><button class="delete-btn" onclick="delV(${x.id})">🗑️</button></div></div>`).join('');
+        document.getElementById('list-v').innerHTML = db.v.map(x=>`<div class="card"><b>${x.n}</b>: €${x.v.toFixed(2)} <button class="delete-btn" onclick="delV(${x.id})">🗑️</button></div>`).join('');
     }
 
     function renderS() {
-        document.getElementById('list-s').innerHTML = db.s.map(x=>`<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><b>${x.m} ${x.a}</b> <div><span style="color:var(--green); margin-right:10px;">€${x.v.toLocaleString()}</span><button class="delete-btn" onclick="delS(${x.id})">🗑️</button></div></div>`).join('');
+        document.getElementById('list-s').innerHTML = db.s.map(x=>`<div class="card"><b>${x.m} ${x.a}</b>: €${x.v.toFixed(2)} <button class="delete-btn" onclick="delS(${x.id})">🗑️</button></div>`).join('');
     }
 
     function renderB() {
@@ -161,13 +147,7 @@
     function initChart() {
         const ctx = document.getElementById('myChart').getContext('2d');
         if(myChart) myChart.destroy();
-        const labels = db.s.map(x=>x.m);
-        const data = db.s.map(x=>x.v);
-        myChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels, datasets: [{ label: 'Stipendio €', data, borderColor: '#3498db', tension: 0.3, fill: true, backgroundColor: 'rgba(52,152,219,0.2)' }] },
-            options: { scales: { y: { beginAtZero: false, grid: {color: '#34495e'} } } }
-        });
+        myChart = new Chart(ctx, { type: 'line', data: { labels: db.s.map(x=>x.m), datasets: [{ label: 'Stipendio €', data: db.s.map(x=>x.v), borderColor: '#3498db', tension: 0.3 }] } });
     }
 
     function pulisci() { document.getElementById('o').value=''; document.getElementById('t').value=''; document.getElementById('extra-area').innerHTML=''; cal(); }
