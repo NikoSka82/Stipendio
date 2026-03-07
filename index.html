@@ -141,7 +141,7 @@
         const ent = db.s.reduce((a,b)=>a+b.v,0);
         const uscV = db.v.reduce((a,b)=>a+b.v,0);
         let uscF = 0; db.f.split('\n').forEach(l=>{ if(l.includes('|')) uscF += parseFloat(l.split('|')[0])||0; });
-        document.getElementById('b-res').innerHTML = `<div class="card" style="font-size:18px;">Entrate: €${ent.toLocaleString()}<br>Uscite: €${(uscV+uscF).toLocaleString()}<hr><b>RESIDUO: €${(ent-uscV-uscF).toLocaleString()}</b></div>`;
+        document.getElementById('b-res').innerHTML = `<div class="card" style="font-size:18px;">Entrate: €${ent.toLocaleString('it-IT',{minimumFractionDigits:2})}<br>Uscite: €${(uscV+uscF).toLocaleString('it-IT',{minimumFractionDigits:2})}<hr><b>RESIDUO: €${(ent-uscV-uscF).toLocaleString('it-IT',{minimumFractionDigits:2})}</b></div>`;
     }
 
     function initChart() {
