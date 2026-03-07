@@ -1,1 +1,15 @@
-{"name": "Stipendio", "short_name": "Stipendio", "start_url": "index.html", "display": "standalone", "background_color": "#1a1c2c", "theme_color": "#3498db"}
+{
+  "name": "Stipendio",
+  "short_name": "Stipendio",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1a1c2c",
+  "theme_color": "#3498db",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2489/2489756.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
