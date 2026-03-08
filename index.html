@@ -6,6 +6,7 @@
     <title>Stipendio PRO</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         :root { --bg: #1a1c2c; --card: #252a41; --accent: #3498db; --green: #2ecc71; --red: #e74c3c; --text: #ecf0f1; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 80px; }
@@ -20,6 +21,7 @@
         .btn-blue { background: var(--accent); } .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .delete-btn { background: var(--red); color: white; border: none; border-radius: 5px; padding: 4px 8px; cursor: pointer; float: right; }
         #netto-big { font-size: 38px; text-align: center; color: var(--green); font-weight: bold; margin: 15px 0; }
+        .fissa-item { font-size: 14px; padding: 5px 0; border-bottom: 1px solid #34495e; }
     </style>
 </head>
 <body>
@@ -63,7 +65,7 @@
 </div>
 
 <div id="stats" class="page">
-    <h2 style="text-align:center;">📈 STATS</h2>
+    <h2 style="text-align:center;">📈 ANDAMENTO</h2>
     <div class="card"><canvas id="myChart"></canvas></div>
 </div>
 
@@ -71,7 +73,7 @@
     <h2 style="text-align:center;">⚙️ SETUP</h2>
     <div class="card">
         <h3>🏠 Spese Fisse (Importo|Nome|Inizio|Fine)</h3>
-        <textarea id="fisse" style="height:120px;" placeholder="Esempio: 500|Affitto|Gennaio|Dicembre"></textarea>
+        <textarea id="fisse" style="height:120px;" placeholder="550|Affitto|Gennaio|Dicembre"></textarea>
         <button class="btn btn-blue" onclick="saveF()">💾 SALVA FISSI</button>
     </div>
     <div class="card">
@@ -94,6 +96,7 @@
 </nav>
 
 <script>
+    Chart.register(ChartDataLabels);
     let db = JSON.parse(localStorage.getItem('stip_db_v3')) || {s:[], v:[], f:""};
     let myChart = null;
 
@@ -104,8 +107,11 @@
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
         el.classList.add('active');
-        if(id==='archivio') renderS(); if(id==='spese') renderV(); if(id==='bilancio') renderB();
-        if(id==='stats') initChart(); if(id==='setup') document.getElementById('fisse').value = db.f;
+        if(id==='archivio') renderS(); 
+        if(id==='spese') renderV(); 
+        if(id==='bilancio') renderB();
+        if(id==='stats') initChart(); 
+        if(id==='setup') document.getElementById('fisse').value = db.f;
     }
 
     function addEx() {
@@ -123,7 +129,10 @@
     }
 
     function saveS() { db.s.push({m:document.getElementById('m').value, a:document.getElementById('a').value, v:cal(), id:Date.now()}); up(); alert("Salvato!"); }
-    function addV() { const v=parseFloat(document.getElementById('sv').value)||0, n=document.getElementById('sn').value||"Spesa"; if(v>0){ db.v.push({v,n,id:Date.now()}); up(); renderV(); } }
+    function addV() { 
+        const v=parseFloat(document.getElementById('sv').value)||0, n=document.getElementById('sn').value||"Spesa";
+        if(v>0){ db.v.push({v,n,m:document.getElementById('m').value,id:Date.now()}); up(); renderV(); }
+    }
     function delV(id) { db.v = db.v.filter(x=>x.id!==id); up(); renderV(); }
     function delS(id) { if(confirm("Eliminare?")){ db.s = db.s.filter(x=>x.id!==id); up(); renderS(); }}
     function saveF() { db.f = document.getElementById('fisse').value; up(); alert("Fissi salvati!"); }
@@ -140,14 +149,53 @@
     function renderB() {
         const ent = db.s.reduce((a,b)=>a+b.v,0);
         const uscV = db.v.reduce((a,b)=>a+b.v,0);
-        let uscF = 0; db.f.split('\n').forEach(l=>{ if(l.includes('|')) uscF += parseFloat(l.split('|')[0])||0; });
-        document.getElementById('b-res').innerHTML = `<div class="card" style="font-size:18px;">Entrate: €${ent.toLocaleString('it-IT',{minimumFractionDigits:2})}<br>Uscite: €${(uscV+uscF).toLocaleString('it-IT',{minimumFractionDigits:2})}<hr><b>RESIDUO: €${(ent-uscV-uscF).toLocaleString('it-IT',{minimumFractionDigits:2})}</b></div>`;
+        let uscF = 0; 
+        let listaFisse = "";
+        db.f.split('\n').forEach(l=>{ 
+            if(l.includes('|')) {
+                const p = l.split('|');
+                const val = parseFloat(p[0])||0;
+                uscF += val;
+                listaFisse += `<div class="fissa-item">📌 ${p[1]}: <b>€${val.toFixed(2)}</b> <br><small>${p[2]||''} - ${p[3]||''}</small></div>`;
+            }
+        });
+        document.getElementById('b-res').innerHTML = `
+            <div class="card"><h3>Dettaglio Spese Fisse</h3>${listaFisse || "Nessuna spesa fissa"}</div>
+            <div class="card" style="font-size:18px; border-left-color:var(--green);">
+                Entrate: €${ent.toLocaleString('it-IT')}<br>
+                Uscite Totali: €${(uscV+uscF).toLocaleString('it-IT')}<hr>
+                <b>RESIDUO: €${(ent-uscV-uscF).toLocaleString('it-IT')}</b>
+            </div>`;
     }
 
     function initChart() {
         const ctx = document.getElementById('myChart').getContext('2d');
         if(myChart) myChart.destroy();
-        myChart = new Chart(ctx, { type: 'line', data: { labels: db.s.map(x=>x.m), datasets: [{ label: 'Stipendio €', data: db.s.map(x=>x.v), borderColor: '#3498db', tension: 0.3 }] } });
+        
+        let uscF = 0; db.f.split('\n').forEach(l=>{ if(l.includes('|')) uscF += parseFloat(l.split('|')[0])||0; });
+        const labels = db.s.map(x=>x.m);
+        const dataStip = db.s.map(x=>x.v);
+        const dataSpese = db.s.map(s => {
+            const v = db.v.filter(x=>x.m === s.m).reduce((a,b)=>a+b.v, 0);
+            return v + uscF;
+        });
+
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Stipendio €', data: dataStip, borderColor: '#2ecc71', backgroundColor: '#2ecc71', tension: 0.3 },
+                    { label: 'Spese Tot €', data: dataSpese, borderColor: '#e74c3c', backgroundColor: '#e74c3c', tension: 0.3 }
+                ]
+            },
+            options: {
+                plugins: {
+                    datalabels: { color: '#fff', align: 'top', font: { size: 10, weight: 'bold' }, formatter: (v) => '€'+Math.round(v) }
+                },
+                scales: { y: { ticks: { color: '#7f8c8d' }, grid: { color: '#34495e' } } }
+            }
+        });
     }
 
     function pulisci() { document.getElementById('o').value=''; document.getElementById('t').value=''; document.getElementById('extra-area').innerHTML=''; cal(); }
