@@ -3,104 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stipendio PRO</title>
-    <link rel="manifest" href="manifest.json">
+    <title>WebAppStipendio V5.9</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
         :root { --bg: #1a1c2c; --card: #252a41; --accent: #3498db; --green: #2ecc71; --red: #e74c3c; --text: #ecf0f1; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 90px; }
         .page { display: none; padding: 15px; }
         .page.active { display: block; }
-        .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid var(--accent); position: relative; }
-        .navbar { position: fixed; bottom: 0; width: 100%; background: #161b33; display: flex; height: 70px; border-top: 1px solid #34495e; z-index: 1000; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; color: #7f8c8d; }
-        .nav-item.active { color: var(--accent); font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0; background: #161b33; border: 1px solid #34495e; color: white; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--accent); position: relative; }
+        .navbar { position: fixed; bottom: 0; width: 100%; background: #161b33; display: flex; overflow-x: auto; height: 75px; border-top: 1px solid #34495e; z-index: 1000; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+        .navbar::-webkit-scrollbar { display: none; }
+        .nav-item { flex: 0 0 33.33%; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer; color: #7f8c8d; text-transform: uppercase; border-right: 1px solid #252a41; }
+        .nav-item.active { color: var(--accent); background: #1c223d; border-bottom: 4px solid var(--accent); }
+        input, select { width: 100%; padding: 12px; margin: 5px 0; background: #161b33; border: 1px solid #34495e; color: white; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
         .btn-blue { background: var(--accent); } .btn-green { background: var(--green); } .btn-red { background: var(--red); }
-        .delete-btn { background: var(--red); color: white; border: none; border-radius: 5px; padding: 4px 8px; cursor: pointer; float: right; }
-        #netto-big { font-size: 38px; text-align: center; color: var(--green); font-weight: bold; margin: 15px 0; }
-        .fissa-item { font-size: 14px; padding: 5px 0; border-bottom: 1px solid #34495e; }
+        .header-click { display: flex; justify-content: space-between; align-items: center; background: #2c3e50; padding: 12px; border-radius: 8px; cursor: pointer; border-left: 5px solid var(--accent); margin-bottom: 20px; }
+        .row-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #34495e; }
+        .del-btn { background: var(--red); border: none; color: white; padding: 8px 14px; border-radius: 6px; font-size: 14px; }
+        #netto-big { font-size: 35px; text-align: center; color: var(--green); font-weight: bold; margin: 10px 0; }
+        .tot-mese { text-align: right; font-size: 18px; color: var(--red); font-weight: bold; margin-bottom: 10px; }
+        .small-date { font-size: 11px; color: #bdc3c7; display: block; margin-top: 5px; font-style: italic; }
+        .fixed-container { display: none; margin-bottom: 15px; background: rgba(52, 152, 219, 0.08); padding: 10px; border-radius: 0 0 8px 8px; border: 1px solid #34495e; border-top: 0; }
     </style>
 </head>
 <body>
 
 <div id="stipendi" class="page active">
-    <h2 style="text-align:center;">💰 STIPENDIO IVECO</h2>
+    <h2 style="text-align:center;">💰 CALCOLO STIPENDIO</h2>
     <div class="card">
         <div style="display:flex; gap:5px;">
-            <select id="m"><option>Gennaio</option><option selected>Febbraio</option><option>Marzo</option><option>Aprile</option><option>Maggio</option><option>Giugno</option><option>Luglio</option><option>Agosto</option><option>Settembre</option><option>Ottobre</option><option>Novembre</option><option>Dicembre</option></select>
-            <select id="a"><option selected>2026</option></select>
+            <select id="m">
+                <option>Gennaio</option><option selected>Febbraio</option><option>Marzo</option><option>Aprile</option><option>Maggio</option><option>Giugno</option>
+                <option>Luglio</option><option>Agosto</option><option>Settembre</option><option>Ottobre</option><option>Novembre</option><option>Dicembre</option>
+                <option>13° Mensilità</option>
+            </select>
+            <select id="a"><option>2026</option><option>2027</option><option>2028</option></select>
         </div>
         <input type="number" id="o" placeholder="Ore Totali" oninput="cal()">
         <input type="number" id="t" placeholder="Ore Trasferta (20€)" oninput="cal()">
         <input type="number" id="k" value="102.30" oninput="cal()">
-        <div id="extra-area"></div>
-        <button class="btn" style="background:transparent; border:1px dashed var(--accent); color:var(--accent);" onclick="addEx()">+ EXTRA / NOTE</button>
         <div id="netto-big">€ 0,00</div>
-        <button class="btn btn-green" onclick="saveS()">💾 SALVA IN ARCHIVIO</button>
-        <button class="btn btn-red" style="opacity:0.7" onclick="pulisci()">🧹 PULISCI TUTTO</button>
+        <button class="btn btn-green" onclick="saveS()">💾 SALVA IN ENTRATE</button>
     </div>
 </div>
 
 <div id="spese" class="page">
-    <h2 style="text-align:center;">💸 USCITE VARIABILI</h2>
+    <h2 style="text-align:center;">💸 USCITE MENSILI</h2>
     <div class="card">
+        <div style="display:flex; gap:5px;">
+            <select id="sv-m" onchange="renderV()">
+                <option>Gennaio</option><option>Febbraio</option><option>Marzo</option><option>Aprile</option><option>Maggio</option><option>Giugno</option>
+                <option>Luglio</option><option>Agosto</option><option>Settembre</option><option>Ottobre</option><option>Novembre</option><option>Dicembre</option>
+            </select>
+            <select id="sv-a" onchange="renderV()"><option>2026</option><option>2027</option><option>2028</option></select>
+        </div>
+        <input type="text" id="sn" placeholder="Causale (es. Spesa)">
         <input type="number" id="sv" placeholder="Importo €">
-        <input type="text" id="sn" placeholder="Causale">
         <button class="btn btn-red" onclick="addV()">➕ AGGIUNGI SPESA</button>
     </div>
-    <div id="list-v"></div>
+    <div id="tot-uscita" class="tot-mese"></div>
+    <div id="fixed-header" class="header-click" onclick="toggleFixed()" style="display:none; margin-bottom:0;"><span id="fixed-title">📌 SPESE FISSE</span><span>▼</span></div>
+    <div id="list-f" class="fixed-container"></div>
+    <div id="list-v" style="margin-top:10px;"></div>
 </div>
 
 <div id="archivio" class="page">
-    <h2 style="text-align:center;">📂 STORICO</h2>
+    <h2 style="text-align:center;">📂 ENTRATE</h2>
     <div id="list-s"></div>
 </div>
 
 <div id="bilancio" class="page">
-    <h2 style="text-align:center;">⚖️ BILANCIO REALE</h2>
+    <h2 style="text-align:center;">⚖️ BILANCIO ANNUALE</h2>
+    <select id="b-a" onchange="renderB()"><option>2026</option><option>2027</option><option>2028</option></select>
     <div id="b-res"></div>
+    <div class="card" style="height: 280px;"><canvas id="pieChart"></canvas></div>
 </div>
 
-<div id="stats" class="page">
+<div id="andamento" class="page">
     <h2 style="text-align:center;">📈 ANDAMENTO</h2>
-    <div class="card"><canvas id="myChart"></canvas></div>
+    <select id="chart-a" onchange="initChart()"><option>2026</option><option>2027</option><option>2028</option></select>
+    <div class="card" style="height: 350px;"><canvas id="myChart"></canvas></div>
 </div>
 
 <div id="setup" class="page">
     <h2 style="text-align:center;">⚙️ SETUP</h2>
     <div class="card">
-        <h3>🏠 Spese Fisse (Importo|Nome|Inizio|Fine)</h3>
-        <textarea id="fisse" style="height:120px;" placeholder="550|Affitto|Gennaio|Dicembre"></textarea>
-        <button class="btn btn-blue" onclick="saveF()">💾 SALVA FISSI</button>
+        <h3>🏠 Aggiungi Spesa Fissa</h3>
+        <input type="text" id="f-n" placeholder="Nome (es. Affitto)">
+        <input type="number" id="f-v" placeholder="€ / mese">
+        <div style="display:flex; gap:5px;"><input type="date" id="f-da" title="Inizio"><input type="date" id="f-a" title="Fine"></div>
+        <button class="btn btn-blue" onclick="addF()">💾 SALVA FISSA</button>
     </div>
     <div class="card">
-        <h3>🔄 Backup</h3>
-        <textarea id="back" style="height:60px; font-size:10px;"></textarea>
-        <div style="display:flex; gap:5px;">
-            <button class="btn btn-green" onclick="exportD()">COPIA</button>
-            <button class="btn btn-red" onclick="importD()">CARICA</button>
-        </div>
+        <h3>🔄 Backup / Ripristino</h3>
+        <textarea id="back" placeholder="Codice backup qui..." style="height:80px; font-size:10px; width:100%; background:#161b33; color:white; border-radius:8px; padding:5px; box-sizing:border-box; border:1px solid #34495e;"></textarea>
+        <div style="display:flex; gap:5px;"><button class="btn btn-blue" style="flex:1" onclick="exportD()">📄 GENERA</button><button class="btn btn-green" style="flex:1" onclick="importD()">📥 CARICA</button></div>
+    </div>
+    <div class="card" style="border-left-color: var(--red); margin-top:20px;">
+        <h3>⚠️ Pericolo</h3>
+        <p style="font-size:12px; opacity:0.8;">Elimina permanentemente tutti i dati salvati.</p>
+        <button class="btn btn-red" onclick="hardReset()">⚠️ RESET TOTALE DATABASE</button>
     </div>
 </div>
 
 <nav class="navbar">
-    <div class="nav-item active" onclick="nav('stipendi',this)">💰 STIPENDI</div>
-    <div class="nav-item" onclick="nav('spese',this)">💸 SPESE</div>
-    <div class="nav-item" onclick="nav('archivio',this)">📂 STORICO</div>
-    <div class="nav-item" onclick="nav('bilancio',this)">⚖️ BILANCIO</div>
-    <div class="nav-item" onclick="nav('stats',this)">📈 STATS</div>
-    <div class="nav-item" onclick="nav('setup',this)">⚙️ SETUP</div>
+    <div class="nav-item active" onclick="nav('stipendi',this)">Stipendi</div>
+    <div class="nav-item" onclick="nav('spese',this)">Spese</div>
+    <div class="nav-item" onclick="nav('archivio',this)">Entrate</div>
+    <div class="nav-item" onclick="nav('bilancio',this)">Bilancio</div>
+    <div class="nav-item" onclick="nav('andamento',this)">Andamento</div>
+    <div class="nav-item" onclick="nav('setup',this)">Setup</div>
 </nav>
 
 <script>
     Chart.register(ChartDataLabels);
-    let db = JSON.parse(localStorage.getItem('stip_db_v3')) || {s:[], v:[], f:""};
-    let myChart = null;
-
-    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+    let db = JSON.parse(localStorage.getItem('stip_db_v4')) || {s:[], v:[], f:[]};
+    const mesiArr = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre","13° Mensilità"];
 
     function nav(id, el) {
         document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -110,97 +130,100 @@
         if(id==='archivio') renderS(); 
         if(id==='spese') renderV(); 
         if(id==='bilancio') renderB();
-        if(id==='stats') initChart(); 
-        if(id==='setup') document.getElementById('fisse').value = db.f;
+        if(id==='andamento') initChart();
     }
 
-    function addEx() {
-        const d = document.createElement('div'); d.className='extra-row';
-        d.innerHTML = `<input type="number" class="ex-v" placeholder="€" oninput="cal()"><input type="text" class="ex-n" placeholder="Nota"><button onclick="this.parentElement.remove();cal();" style="background:var(--red); color:white; border:none; border-radius:5px; width:35px;">X</button>`;
-        document.getElementById('extra-area').appendChild(d);
+    function up() { localStorage.setItem('stip_db_v4', JSON.stringify(db)); }
+    
+    // RESET TOTALE
+    function hardReset() {
+        if(confirm("ATTENZIONE! Vuoi davvero cancellare TUTTO il database? L'operazione non è reversibile.")) {
+            localStorage.removeItem('stip_db_v4');
+            location.reload();
+        }
     }
 
     function cal() {
         const o=parseFloat(document.getElementById('o').value)||0, t=parseFloat(document.getElementById('t').value)||0, k=parseFloat(document.getElementById('k').value)||0;
-        let e=0; document.querySelectorAll('.ex-v').forEach(i=>e+=parseFloat(i.value)||0);
-        const res = ((o*14.94272)*0.7030)+(t*20)+k+244.83-21.40+e;
+        const res = ((o*14.94272)*0.7030)+(t*20)+k+244.83-21.40;
         document.getElementById('netto-big').innerText="€ "+res.toLocaleString('it-IT',{minimumFractionDigits:2});
         return res;
     }
-
     function saveS() { db.s.push({m:document.getElementById('m').value, a:document.getElementById('a').value, v:cal(), id:Date.now()}); up(); alert("Salvato!"); }
-    function addV() { 
-        const v=parseFloat(document.getElementById('sv').value)||0, n=document.getElementById('sn').value||"Spesa";
-        if(v>0){ db.v.push({v,n,m:document.getElementById('m').value,id:Date.now()}); up(); renderV(); }
-    }
-    function delV(id) { db.v = db.v.filter(x=>x.id!==id); up(); renderV(); }
-    function delS(id) { if(confirm("Eliminare?")){ db.s = db.s.filter(x=>x.id!==id); up(); renderS(); }}
-    function saveF() { db.f = document.getElementById('fisse').value; up(); alert("Fissi salvati!"); }
-    function up() { localStorage.setItem('stip_db_v3', JSON.stringify(db)); }
-
-    function renderV() {
-        document.getElementById('list-v').innerHTML = db.v.map(x=>`<div class="card"><b>${x.n}</b>: €${x.v.toFixed(2)} <button class="delete-btn" onclick="delV(${x.id})">🗑️</button></div>`).join('');
-    }
-
+    
     function renderS() {
-        document.getElementById('list-s').innerHTML = db.s.map(x=>`<div class="card"><b>${x.m} ${x.a}</b>: €${x.v.toFixed(2)} <button class="delete-btn" onclick="delS(${x.id})">🗑️</button></div>`).join('');
+        const container = document.getElementById('list-s');
+        const years = [...new Set(db.s.map(x => x.a))].sort().reverse();
+        container.innerHTML = years.map(y => {
+            const totY = db.s.filter(x => x.a === y).reduce((a,b)=>a+b.v,0);
+            return `<div class="header-click" onclick="toggleArch('${y}')"><span><b>${y} - TOT: € ${totY.toLocaleString()}</b></span><div><button class="del-btn" onclick="event.stopPropagation(); delY('${y}')">Elimina</button> <span>▼</span></div></div><div id="arch-${y}" style="display:none; margin-bottom:30px; padding-left:10px;">${db.s.filter(x => x.a === y).map(x => `<div class="card row-item"><span>${x.m}: <b>€${x.v.toFixed(2)}</b></span><button class="del-btn" onclick="delItem('s', ${x.id})">🗑️</button></div>`).join('')}</div>`;
+        }).join('');
     }
-
-    function renderB() {
-        const ent = db.s.reduce((a,b)=>a+b.v,0);
-        const uscV = db.v.reduce((a,b)=>a+b.v,0);
-        let uscF = 0; 
-        let listaFisse = "";
-        db.f.split('\n').forEach(l=>{ 
-            if(l.includes('|')) {
-                const p = l.split('|');
-                const val = parseFloat(p[0])||0;
-                uscF += val;
-                listaFisse += `<div class="fissa-item">📌 ${p[1]}: <b>€${val.toFixed(2)}</b> <br><small>${p[2]||''} - ${p[3]||''}</small></div>`;
+    function toggleArch(y) { const e = document.getElementById('arch-'+y); e.style.display = e.style.display==='none'?'block':'none'; }
+    function delY(y) { if(confirm("Eliminare intero anno "+y+"?")) { db.s = db.s.filter(x=>x.a!==y); up(); renderS(); }}
+    function addV() { const v=parseFloat(document.getElementById('sv').value)||0, n=document.getElementById('sn').value, m=document.getElementById('sv-m').value, a=document.getElementById('sv-a').value; if(v>0) { db.v.push({v, n, m, a, id:Date.now()}); up(); renderV(); document.getElementById('sv').value=''; document.getElementById('sn').value=''; } }
+    
+    function renderV() {
+        const yr = parseInt(document.getElementById('sv-a').value);
+        const selMese = document.getElementById('sv-m').value;
+        const mtIndex = mesiArr.indexOf(selMese);
+        let total = 0;
+        let htmlV = db.v.filter(x=>x.a==yr && x.m==selMese).map(x=>{ total += x.v; return `<div class="card row-item" style="border-left-color: var(--red);"><span>${x.n}: <b>€${x.v.toFixed(2)}</b></span><button class="del-btn" onclick="delItem('v', ${x.id})">🗑️</button></div>`; }).join('');
+        document.getElementById('list-v').innerHTML = htmlV || "<p style='text-align:center; opacity:0.5;'>Nessuna spesa variabile</p>";
+        let htmlF = ""; let countF = 0; let idFisseMese = [];
+        db.f.forEach(f => {
+            const start = new Date(f.da + "T00:00:00"); const end = new Date(f.a + "T23:59:59");
+            const check = new Date(yr, mtIndex, 2);
+            if(check >= start && check <= end) {
+                total += f.v; countF++; idFisseMese.push(f.id);
+                htmlF += `<div class="card row-item" style="border-left-color: var(--accent); margin-bottom:5px; background: #1c223d;"><div><span>📌 ${f.n}: <b>€${f.v.toFixed(2)}</b></span><span class="small-date">Dal: ${new Date(f.da).toLocaleDateString()} Al: ${new Date(f.a).toLocaleDateString()}</span></div><button class="del-btn" onclick="delItem('f', ${f.id})">🗑️</button></div>`;
             }
         });
-        document.getElementById('b-res').innerHTML = `
-            <div class="card"><h3>Dettaglio Spese Fisse</h3>${listaFisse || "Nessuna spesa fissa"}</div>
-            <div class="card" style="font-size:18px; border-left-color:var(--green);">
-                Entrate: €${ent.toLocaleString('it-IT')}<br>
-                Uscite Totali: €${(uscV+uscF).toLocaleString('it-IT')}<hr>
-                <b>RESIDUO: €${(ent-uscV-uscF).toLocaleString('it-IT')}</b>
-            </div>`;
+        const headerF = document.getElementById('fixed-header');
+        const containerF = document.getElementById('list-f');
+        if(countF > 0) { headerF.style.display = 'flex'; containerF.innerHTML = `<button class="btn btn-red" style="padding:10px; font-size:12px; margin-bottom:10px; width:100%;" onclick="delMultipleF([${idFisseMese}])">🗑️ SVUOTA FISSE DEL MESE</button>` + htmlF; } else { headerF.style.display = 'none'; containerF.style.display = 'none'; }
+        document.getElementById('tot-uscita').innerText = "Totale Mese: € " + total.toFixed(2);
+    }
+
+    function delMultipleF(ids) { if(confirm("Eliminare fisse del mese?")) { db.f = db.f.filter(f => !ids.includes(f.id)); up(); renderV(); }}
+    function toggleFixed() { const e = document.getElementById('list-f'); e.style.display = (e.style.display === 'block') ? 'none' : 'block'; }
+    function addF() { const n=document.getElementById('f-n').value, v=parseFloat(document.getElementById('f-v').value)||0, da=document.getElementById('f-da').value, a=document.getElementById('f-a').value; if(n && v>0 && da && a) { db.f.push({n, v, da, a, id:Date.now()}); up(); alert("Salvata!"); document.getElementById('f-n').value=''; document.getElementById('f-v').value=''; } else { alert("Compila tutto!"); } }
+    function delItem(type, id) { if(confirm("Eliminare?")) { db[type] = db[type].filter(x=>x.id!==id); up(); renderV(); renderS(); }}
+
+    function renderB() {
+        const yr = document.getElementById('b-a').value; 
+        const ent = db.s.filter(x=>x.a===yr).reduce((a,b)=>a+b.v,0);
+        let uscV = db.v.filter(x=>x.a===yr).reduce((a,b)=>a+b.v,0); 
+        let uscF = 0;
+        for(let i=0; i<12; i++) {
+            db.f.forEach(f => {
+                const s = new Date(f.da + "T00:00:00"), e = new Date(f.a + "T23:59:59"), c = new Date(yr, i, 2);
+                if(c >= s && c <= e) uscF += f.v;
+            });
+        }
+        const uscTot = uscV + uscF;
+        document.getElementById('b-res').innerHTML = `<div class="card"><b>Resoconto ${yr} (incl. 13°)</b><br>Entrate Totali: €${ent.toLocaleString()}<br>Uscite Totali: €${uscTot.toLocaleString()}<hr><b>RISPARMIO EFFETTIVO: €${(ent-uscTot).toLocaleString()}</b></div>`;
+        const ctxP = document.getElementById('pieChart').getContext('2d');
+        if(window.pChart) window.pChart.destroy();
+        window.pChart = new Chart(ctxP, { type: 'pie', data: { labels: ['Uscite', 'Risparmio'], datasets: [{ data: [uscTot, Math.max(0, ent-uscTot)], backgroundColor: ['#e74c3c', '#2ecc71'] }] }, options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } }, datalabels: { color: '#fff', font: { weight: 'bold', size: 14 }, formatter: (v, ctx) => { let s = 0; ctx.chart.data.datasets[0].data.map(d => s += d); return s>0 ? (v*100/s).toFixed(1)+"%" : "0%"; } } } } });
     }
 
     function initChart() {
-        const ctx = document.getElementById('myChart').getContext('2d');
-        if(myChart) myChart.destroy();
-        
-        let uscF = 0; db.f.split('\n').forEach(l=>{ if(l.includes('|')) uscF += parseFloat(l.split('|')[0])||0; });
-        const labels = db.s.map(x=>x.m);
-        const dataStip = db.s.map(x=>x.v);
-        const dataSpese = db.s.map(s => {
-            const v = db.v.filter(x=>x.m === s.m).reduce((a,b)=>a+b.v, 0);
-            return v + uscF;
+        const ctx = document.getElementById('myChart').getContext('2d'); const yr = document.getElementById('chart-a').value;
+        if(window.chartObj) window.chartObj.destroy();
+        let lastM = -1; mesiArr.slice(0,12).forEach((m, i) => { if(db.s.some(x => x.m === m && x.a === yr)) lastM = i; });
+        const labels = (lastM === -1) ? [] : mesiArr.slice(0, lastM + 1);
+        const dEnt = labels.map(m => { const e = db.s.find(x => x.m === m && x.a === yr); return e ? e.v : 0; });
+        const dUsc = labels.map((m, i) => { 
+            let vU = db.v.filter(v => v.m === m && v.a === yr).reduce((a, b) => a + b.v, 0); 
+            let fU = 0; db.f.forEach(f => { const s = new Date(f.da + "T00:00:00"), e = new Date(f.a + "T23:59:59"), c = new Date(yr, i, 2); if (c >= s && c <= e) fU += f.v; }); 
+            return vU + fU; 
         });
-
-        myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'Stipendio €', data: dataStip, borderColor: '#2ecc71', backgroundColor: '#2ecc71', tension: 0.3 },
-                    { label: 'Spese Tot €', data: dataSpese, borderColor: '#e74c3c', backgroundColor: '#e74c3c', tension: 0.3 }
-                ]
-            },
-            options: {
-                plugins: {
-                    datalabels: { color: '#fff', align: 'top', font: { size: 10, weight: 'bold' }, formatter: (v) => '€'+Math.round(v) }
-                },
-                scales: { y: { ticks: { color: '#7f8c8d' }, grid: { color: '#34495e' } } }
-            }
-        });
+        window.chartObj = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: 'Entrate €', data: dEnt, borderColor: '#2ecc71', backgroundColor: '#2ecc71', tension: 0.3, pointRadius: 5 }, { label: 'Uscite €', data: dUsc, borderColor: '#e74c3c', backgroundColor: '#e74c3c', tension: 0.3, pointRadius: 5 }] }, options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } }, datalabels: { align: 'top', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: (v) => v > 0 ? '€' + v.toFixed(0) : '' } }, scales: { y: { beginAtZero: true, ticks: { color: '#fff' }, grid: { color: '#34495e' } }, x: { ticks: { color: '#fff' }, grid: { color: '#34495e' } } } } });
     }
 
-    function pulisci() { document.getElementById('o').value=''; document.getElementById('t').value=''; document.getElementById('extra-area').innerHTML=''; cal(); }
-    function exportD() { document.getElementById('back').value = btoa(JSON.stringify(db)); alert("Copiato!"); }
-    function importD() { try { db = JSON.parse(atob(document.getElementById('back').value)); up(); location.reload(); } catch(e){alert("Errore!");} }
+    function exportD() { document.getElementById('back').value = JSON.stringify(db); alert("Backup generato!"); }
+    function importD() { try { db = JSON.parse(document.getElementById('back').value); up(); location.reload(); } catch(e) { alert("Errore backup!"); }}
 </script>
 </body>
 </html>
