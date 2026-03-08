@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="manifest" href="data:application/json;base64,ewogICJkZWZhdWx0X2xvY2FsZSI6ICJpdCIsCiAgIm5hbWUiOiAiV2ViQXBwU3RpcGVuZGlvIiwKICAic2hvcnRfbmFtZSI6ICJTdGlwZW5kaW8iLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzFhMWMyYyIsCiAgInRoZW1lX2NvbG9yIjogIiMxYTFjMmMiCn0=">
-    <title>WebAppStipendio V6.7</title>
+    <meta name="theme-color" content="#1a1c2c">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/2489/2489796.png">
+    
+    <title>Stipendio V6.9</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -17,45 +21,17 @@
         .page.active { display: block; }
         .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--accent); position: relative; }
         
-        /* NAVBAR RIPRISTINATA 3 A 3 - BARRA NASCOSTA */
+        /* NAVBAR FIX - SCROLL 3 A 3 E BARRA INVISIBILE */
         .navbar { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0;
-            width: 100%; 
-            background: #161b33; 
-            display: flex; 
-            height: 75px; 
-            border-top: 1px solid #34495e; 
-            z-index: 1000;
-            overflow-x: auto; /* Torna lo scorrimento */
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none; /* Nasconde barra su Firefox */
-            -ms-overflow-style: none;  /* Nasconde barra su IE/Edge */
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #161b33; 
+            display: flex; height: 75px; border-top: 1px solid #34495e; z-index: 1000; 
+            overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; 
         }
-        
-        /* Nasconde barra su Chrome/Safari/Android */
-        .navbar::-webkit-scrollbar { 
-            display: none !important; 
-            width: 0 !important; 
-            height: 0 !important; 
-            background: transparent; 
-        }
-
+        .navbar::-webkit-scrollbar { display: none !important; }
         .nav-item { 
-            flex: 0 0 33.33%; /* Rimesso 3 a 3 */
-            scroll-snap-align: start;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 13px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            color: #7f8c8d; 
-            text-transform: uppercase; 
-            border-right: 1px solid #252a41;
-            box-sizing: border-box;
+            flex: 0 0 33.33%; scroll-snap-align: start; display: flex; align-items: center; 
+            justify-content: center; font-size: 13px; font-weight: bold; cursor: pointer; 
+            color: #7f8c8d; text-transform: uppercase; border-right: 1px solid #252a41; box-sizing: border-box; 
         }
         .nav-item.active { color: var(--accent); background: #1c223d; border-bottom: 4px solid var(--accent); }
 
@@ -115,7 +91,7 @@
     <h2 style="text-align:center;">⚙️ SETUP</h2>
     <div class="card"><h3>🏠 Aggiungi Spesa Fissa</h3><input type="text" id="f-n" placeholder="Nome"><input type="number" id="f-v" placeholder="€/mese"><div style="display:flex; gap:5px;"><input type="date" id="f-da"><input type="date" id="f-a"></div><button class="btn btn-blue" onclick="addF()">💾 SALVA FISSA</button></div>
     <div class="card"><h3>🔄 Backup / Ripristino</h3><textarea id="back" placeholder="Codice backup..." style="height:80px; font-size:10px; width:100%; background:#161b33; color:white; border-radius:8px; padding:5px; box-sizing:border-box; border:1px solid #34495e;"></textarea><div style="display:flex; gap:5px;"><button class="btn btn-blue" style="flex:1" onclick="exportD()">📄 GENERA</button><button class="btn btn-green" style="flex:1" onclick="importD()">📥 CARICA</button></div></div>
-    <div class="card" style="border-left-color: var(--red);"><h3>⚠️ Pericolo</h3><button class="btn btn-red" onclick="hardReset()">⚠️ RESET TOTALE DATABASE</button></div>
+    <div class="card" style="border-left-color: var(--red);"><h3>⚠️ Pericolo</h3><button class="btn btn-red" onclick="hardReset()">⚠️ CANCELLA TUTTO IL DATABASE</button></div>
 </div>
 
 <nav class="navbar">
@@ -140,7 +116,7 @@
         if(id==='archivio') renderS(); if(id==='spese') renderV(); if(id==='bilancio') renderB(); if(id==='andamento') initChart();
     }
     function up() { localStorage.setItem('stip_db_v4', JSON.stringify(db)); }
-    function hardReset() { if(confirm("Resettare tutto?")) { localStorage.removeItem('stip_db_v4'); location.reload(); } }
+    function hardReset() { if(confirm("Cancellare tutto il database?")) { localStorage.removeItem('stip_db_v4'); location.reload(); } }
     function cal() { const o=parseFloat(document.getElementById('o').value)||0, t=parseFloat(document.getElementById('t').value)||0, k=parseFloat(document.getElementById('k').value)||0; const res = ((o*14.94272)*0.7030)+(t*20)+k+244.83-21.40; document.getElementById('netto-big').innerText="€ "+res.toLocaleString('it-IT',{minimumFractionDigits:2}); return res; }
     function saveS() { db.s.push({m:document.getElementById('m').value, a:document.getElementById('a').value, v:cal(), id:Date.now()}); up(); alert("Salvato!"); }
     
@@ -201,6 +177,15 @@
     function delItem(t, id) { if(confirm("Eliminare?")) { db[t] = db[t].filter(x=>x.id!==id); up(); renderS(); renderV(); }}
     function exportD() { document.getElementById('back').value = JSON.stringify(db); alert("Backup generato!"); }
     function importD() { try { db = JSON.parse(document.getElementById('back').value); up(); location.reload(); } catch(e) { alert("Errore!"); }}
+
+    // Registrazione Service Worker per l'installazione
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW Registrato!'))
+          .catch(err => console.log('Errore SW:', err));
+      });
+    }
 </script>
 </body>
 </html>
