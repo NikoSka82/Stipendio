@@ -4,20 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="manifest" href="data:application/json;base64,ewogICJkZWZhdWx0X2xvY2FsZSI6ICJpdCIsCiAgIm5hbWUiOiAiV2ViQXBwU3RpcGVuZGlvIiwKICAic2hvcnRfbmFtZSI6ICJTdGlwZW5kaW8iLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzFhMWMyYyIsCiAgInRoZW1lX2NvbG9yIjogIiMxYTFjMmMiCn0=">
-    <title>WebAppStipendio V6.5</title>
+    <title>WebAppStipendio V6.7</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --bg: #1a1c2c; --card: #252a41; --accent: #3498db; --green: #2ecc71; --red: #e74c3c; --text: #ecf0f1; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 90px; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 90px; overflow-x: hidden; }
         .page { display: none; padding: 15px; }
         .page.active { display: block; }
         .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--accent); position: relative; }
-        .navbar { position: fixed; bottom: 0; width: 100%; background: #161b33; display: flex; overflow-x: auto; height: 75px; border-top: 1px solid #34495e; z-index: 1000; }
-        .nav-item { flex: 0 0 33.33%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer; color: #7f8c8d; text-transform: uppercase; border-right: 1px solid #252a41; }
+        
+        /* NAVBAR RIPRISTINATA 3 A 3 - BARRA NASCOSTA */
+        .navbar { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0;
+            width: 100%; 
+            background: #161b33; 
+            display: flex; 
+            height: 75px; 
+            border-top: 1px solid #34495e; 
+            z-index: 1000;
+            overflow-x: auto; /* Torna lo scorrimento */
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Nasconde barra su Firefox */
+            -ms-overflow-style: none;  /* Nasconde barra su IE/Edge */
+        }
+        
+        /* Nasconde barra su Chrome/Safari/Android */
+        .navbar::-webkit-scrollbar { 
+            display: none !important; 
+            width: 0 !important; 
+            height: 0 !important; 
+            background: transparent; 
+        }
+
+        .nav-item { 
+            flex: 0 0 33.33%; /* Rimesso 3 a 3 */
+            scroll-snap-align: start;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 13px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: #7f8c8d; 
+            text-transform: uppercase; 
+            border-right: 1px solid #252a41;
+            box-sizing: border-box;
+        }
         .nav-item.active { color: var(--accent); background: #1c223d; border-bottom: 4px solid var(--accent); }
+
         input, select { width: 100%; padding: 12px; margin: 5px 0; background: #161b33; border: 1px solid #34495e; color: white; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
         .btn-blue { background: var(--accent); } .btn-green { background: var(--green); } .btn-red { background: var(--red); }
@@ -53,7 +94,7 @@
 
 <div id="archivio" class="page">
     <h2 style="text-align:center;">📂 ENTRATE</h2>
-    <button class="btn btn-blue" onclick="downloadPDF()" style="margin-bottom:15px;">📄 GENERA PDF PROFESSIONALE</button>
+    <button class="btn btn-blue" onclick="downloadPDF()" style="margin-bottom:15px;">📄 PDF PROFESSIONALE</button>
     <div id="list-s"></div>
 </div>
 
@@ -111,45 +152,19 @@
     function delY(y) { if(confirm("Eliminare intero anno "+y+"?")) { db.s = db.s.filter(x=>x.a!==y); up(); renderS(); }}
     function toggleArch(y) { const e = document.getElementById('arch-'+y); e.style.display = e.style.display==='none'?'block':'none'; }
 
-    // NUOVA FUNZIONE PDF PROFESSIONALE
     function downloadPDF() {
         const yrs = [...new Set(db.s.map(x => x.a))].sort().reverse();
-        if(yrs.length === 0) { alert("Nessun dato da esportare!"); return; }
-
-        let htmlContent = `<div style="padding: 20px; font-family: Arial, sans-serif; color: #000; background: #fff;">
-            <h1 style="text-align: center; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">RECONTO ENTRATE - WebAppStipendio</h1>`;
-
+        if(yrs.length === 0) { alert("Nessun dato!"); return; }
+        let htmlContent = `<div style="padding: 20px; font-family: Arial; color: #000; background: #fff;"><h1 style="text-align: center; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">RECONTO ENTRATE</h1>`;
         yrs.forEach(y => {
-            const entrateAnno = db.s.filter(x => x.a === y);
-            const totaleAnno = entrateAnno.reduce((a, b) => a + b.v, 0);
-            htmlContent += `<h2 style="margin-top: 30px; background: #f2f2f2; padding: 10px;">Anno: ${y} (Totale: € ${totaleAnno.toLocaleString('it-IT', {minimumFractionDigits: 2})})</h2>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                    <thead>
-                        <tr style="background: #3498db; color: #fff;">
-                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Mese / Voce</th>
-                            <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Importo Netto</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-            entrateAnno.forEach(x => {
-                htmlContent += `<tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${x.m}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold;">€ ${x.v.toLocaleString('it-IT', {minimumFractionDigits: 2})}</td>
-                </tr>`;
-            });
+            const entAnno = db.s.filter(x => x.a === y);
+            const totAnno = entAnno.reduce((a, b) => a + b.v, 0);
+            htmlContent += `<h2 style="margin-top: 20px; background: #eee; padding: 10px;">Anno: ${y} (Tot: € ${totAnno.toLocaleString('it-IT')})</h2><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #3498db; color: #fff;"><th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Mese</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Importo</th></tr></thead><tbody>`;
+            entAnno.forEach(x => { htmlContent += `<tr><td style="padding: 6px; border: 1px solid #ddd;">${x.m}</td><td style="padding: 6px; border: 1px solid #ddd; text-align: right; font-weight: bold;">€ ${x.v.toLocaleString('it-IT')}</td></tr>`; });
             htmlContent += `</tbody></table>`;
         });
-        htmlContent += `<p style="margin-top: 40px; text-align: center; font-size: 10px; color: #777;">Documento generato il ${new Date().toLocaleDateString()} - Domenico WebApp</p></div>`;
-
-        const opt = {
-            margin: 10,
-            filename: `Archivio_Entrate_${new Date().getFullYear()}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opt).from(htmlContent).save();
+        htmlContent += `</div>`;
+        html2pdf().set({ margin: 10, filename: 'Archivio_Stipendi.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4' } }).from(htmlContent).save();
     }
 
     function addV() { const v=parseFloat(document.getElementById('sv').value)||0, n=document.getElementById('sn').value, m=document.getElementById('sv-m').value, a=document.getElementById('sv-a').value; if(v>0) { db.v.push({v, n, m, a, id:Date.now()}); up(); renderV(); } }
@@ -157,7 +172,7 @@
         const yr = parseInt(document.getElementById('sv-a').value), selM = document.getElementById('sv-m').value, mtIdx = mesiArr.indexOf(selM);
         let tot = 0; let htmlV = db.v.filter(x=>x.a==yr && x.m==selM).map(x=>{ tot += x.v; return `<div class="card row-item"><span>${x.n}: <b>€${x.v.toFixed(2)}</b></span><button class="del-btn" onclick="delItem('v', ${x.id})">🗑️</button></div>`; }).join('');
         let htmlF = ""; let countF = 0; let idsF = []; db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, mtIdx, 2); if(c>=s && c<=e) { tot+=f.v; countF++; idsF.push(f.id); htmlF+=`<div class="card row-item" style="border-left-color: var(--accent);"><span>📌 ${f.n}: <b>€${f.v.toFixed(2)}</b></span><button class="del-btn" onclick="delItem('f', ${f.id})">🗑️</button></div>`; }});
-        document.getElementById('list-v').innerHTML = htmlV || '<p style="text-align:center; opacity:0.5;">Nessuna spesa variabile</p>'; 
+        document.getElementById('list-v').innerHTML = htmlV; 
         document.getElementById('list-f').innerHTML = countF > 0 ? `<button class="btn btn-red" style="padding:10px; font-size:12px; margin-bottom:10px; width:100%;" onclick="delMultipleF([${idsF}])">🗑️ SVUOTA FISSE DEL MESE</button>` + htmlF : htmlF;
         document.getElementById('fixed-header').style.display = countF>0?'flex':'none'; document.getElementById('tot-uscita').innerText = "Totale Mese: € "+tot.toFixed(2);
     }
@@ -179,11 +194,7 @@
         const labels = mesiArr.slice(0,12);
         const dEnt = labels.map(m => { const e = db.s.find(x => x.m === m && x.a === yr); return e ? e.v : 0; });
         const dUsc = labels.map((m, i) => { let uV = db.v.filter(v=>v.m===m && v.a===yr).reduce((a,b)=>a+b.v,0), uF=0; db.f.forEach(f=>{ const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, i, 2); if(c>=s && c<=e) uF+=f.v; }); return uV+uF; });
-        window.chartObj = new Chart(ctx, { 
-            type: 'line', 
-            data: { labels, datasets: [{ label: 'Entrate', data: dEnt, borderColor: '#2ecc71', backgroundColor: '#2ecc71', tension: 0.3, pointRadius: 5 }, { label: 'Uscite', data: dUsc, borderColor: '#e74c3c', backgroundColor: '#e74c3c', tension: 0.3, pointRadius: 5 }] }, 
-            options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } }, datalabels: { align: 'top', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: (v) => v > 0 ? '€' + v.toFixed(0) : '' } }, scales: { y: { ticks: { color: '#fff' }, grid: { color: '#34495e' } }, x: { ticks: { color: '#fff' }, grid: { color: '#34495e' } } } } 
-        });
+        window.chartObj = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: 'Entrate', data: dEnt, borderColor: '#2ecc71', backgroundColor: '#2ecc71', tension: 0.3, pointRadius: 5 }, { label: 'Uscite', data: dUsc, borderColor: '#e74c3c', backgroundColor: '#e74c3c', tension: 0.3, pointRadius: 5 }] }, options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } }, datalabels: { align: 'top', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: (v) => v > 0 ? '€' + v.toFixed(0) : '' } }, scales: { y: { ticks: { color: '#fff' }, grid: { color: '#34495e' } }, x: { ticks: { color: '#fff' }, grid: { color: '#34495e' } } } } });
     }
 
     function addF() { const n=document.getElementById('f-n').value, v=parseFloat(document.getElementById('f-v').value)||0, da=document.getElementById('f-da').value, a=document.getElementById('f-a').value; if(n && v>0 && da && a) { db.f.push({n, v, da, a, id:Date.now()}); up(); alert("Salvata!"); } }
