@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#1a1c2c">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/2489/2489796.png">
-    <title>Stipendio V7.0</title>
+    <title>Stipendio V7.2</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -112,6 +112,7 @@
     }
     function up() { localStorage.setItem('stip_db_v4', JSON.stringify(db)); }
     function hardReset() { if(confirm("Cancellare tutto il database?")) { localStorage.removeItem('stip_db_v4'); location.reload(); } }
+    
     function cal() { const o=parseFloat(document.getElementById('o').value)||0, t=parseFloat(document.getElementById('t').value)||0, k=parseFloat(document.getElementById('k').value)||0; const res = ((o*14.94272)*0.7030)+(t*20)+k+244.83-21.40; document.getElementById('netto-big').innerText="€ "+res.toLocaleString('it-IT',{minimumFractionDigits:2}); return res; }
     function saveS() { db.s.push({m:document.getElementById('m').value, a:document.getElementById('a').value, v:cal(), id:Date.now()}); up(); alert("Salvato!"); }
     
@@ -159,17 +160,13 @@
     function toggleFixed() { const e=document.getElementById('list-f'); e.style.display=e.style.display==='block'?'none':'block'; }
 
     function renderB() {
-        const yr = document.getElementById('b-a').value, selM = document.getElementById('b-m').value;
-        const mtIdx = mesiArr.indexOf(selM);
-        
-        // BILANCIO MENSILE
+        const yr = document.getElementById('b-a').value, selM = document.getElementById('b-m').value, mtIdx = mesiArr.indexOf(selM);
         const entM = db.s.filter(x => x.m === selM && x.a === yr).reduce((a,b) => a+b.v, 0);
         let uscM_V = db.v.filter(x => x.m === selM && x.a === yr).reduce((a,b) => a+b.v, 0);
         let uscM_F = 0; db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, mtIdx, 2); if(c>=s && c<=e) uscM_F += f.v; });
         const totUM = uscM_V + uscM_F;
         document.getElementById('b-res').innerHTML = `<div class="card" style="border-left-color: var(--green);"><b>BILANCIO ${selM.toUpperCase()} ${yr}</b><br><br>Entrate: €${entM.toLocaleString('it-IT')}<br>Uscite: €${totUM.toLocaleString('it-IT')}<hr>RESIDUO: <b>€${(entM-totUM).toLocaleString('it-IT')}</b></div>`;
 
-        // BILANCIO ANNUALE (calcolato ma mostrato solo al toggle)
         const entY = db.s.filter(x=>x.a===yr).reduce((a,b)=>a+b.v,0);
         let uscV = db.v.filter(x=>x.a===yr).reduce((a,b)=>a+b.v,0), uscF = 0;
         for(let i=0; i<12; i++) { db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, i, 2); if(c>=s && c<=e) uscF+=f.v; }); }
@@ -190,30 +187,51 @@
     function initChart() {
         const ctx = document.getElementById('myChart').getContext('2d'), yr = document.getElementById('chart-a').value;
         if(window.chartObj) window.chartObj.destroy();
-        const labels = mesiArr.slice(0,12);
-        
-        let dEnt = [], dUsc = [];
-        let lastFilledIndex = -1;
+        const labelsMesi = mesiArr.slice(0,12);
+        let dEnt = [], dUsc = [], finalLabels = [];
 
-        labels.forEach((m, i) => {
+        labelsMesi.forEach((m, i) => {
             const e = db.s.find(x => x.m === m && x.a === yr);
-            let uV = db.v.filter(v=>v.m===m && v.a===yr).reduce((a,b)=>a+b.v,0), uF=0;
-            db.f.forEach(f=>{ const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, i, 2); if(c>=s && c<=e) uF+=f.v; });
-            
-            const valEnt = e ? e.v : 0;
-            const valUsc = uV+uF;
+            let uV = db.v.filter(v => v.m === m && v.a === yr).reduce((a, b) => a + b.v, 0), uF = 0;
+            db.f.forEach(f => { 
+                const s = new Date(f.da + "T00:00:00"), eDate = new Date(f.a + "T23:59:59"), c = new Date(yr, i, 2); 
+                if(c >= s && c <= eDate) uF += f.v; 
+            });
 
-            if(valEnt > 0 || valUsc > 0) lastFilledIndex = i;
-            dEnt.push(valEnt);
-            dUsc.push(valUsc);
+            const valEnt = e ? e.v : 0;
+            const valUsc = uV + uF;
+
+            // Mostriamo il mese nel grafico SOLO se c'è almeno un'entrata o un'uscita registrata
+            if (valEnt > 0 || valUsc > 0) {
+                dEnt.push(valEnt);
+                dUsc.push(valUsc);
+                finalLabels.push(m);
+            }
         });
 
-        // Tagliamo i dati all'ultimo mese che ha valori per evitare il crollo a zero
-        const cleanLabels = labels.slice(0, lastFilledIndex + 1);
-        const cleanEnt = dEnt.slice(0, lastFilledIndex + 1);
-        const cleanUsc = dUsc.slice(0, lastFilledIndex + 1);
+        if (finalLabels.length === 0) return;
 
-        window.chartObj = new Chart(ctx, { type: 'line', data: { labels: cleanLabels, datasets: [{ label: 'Entrate', data: cleanEnt, borderColor: '#2ecc71', backgroundColor: '#2ecc71', tension: 0.3, pointRadius: 5 }, { label: 'Uscite', data: cleanUsc, borderColor: '#e74c3c', backgroundColor: '#e74c3c', tension: 0.3, pointRadius: 5 }] }, options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } }, datalabels: { align: 'top', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: (v) => v > 0 ? '€' + v.toFixed(0) : '' } }, scales: { y: { ticks: { color: '#fff' }, grid: { color: '#34495e' } }, x: { ticks: { color: '#fff' }, grid: { color: '#34495e' } } } } });
+        window.chartObj = new Chart(ctx, { 
+            type: 'line', 
+            data: { 
+                labels: finalLabels, 
+                datasets: [
+                    { label: 'Entrate', data: dEnt, borderColor: '#2ecc71', backgroundColor: '#2ecc71', tension: 0.3, pointRadius: 5 }, 
+                    { label: 'Uscite', data: dUsc, borderColor: '#e74c3c', backgroundColor: '#e74c3c', tension: 0.3, pointRadius: 5 }
+                ] 
+            }, 
+            options: { 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { labels: { color: '#fff' } }, 
+                    datalabels: { align: 'top', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: (v) => v > 0 ? '€' + v.toFixed(0) : '' } 
+                }, 
+                scales: { 
+                    y: { ticks: { color: '#fff' }, grid: { color: '#34495e' } }, 
+                    x: { ticks: { color: '#fff' }, grid: { color: '#34495e' } } 
+                } 
+            } 
+        });
     }
 
     function addF() { const n=document.getElementById('f-n').value, v=parseFloat(document.getElementById('f-v').value)||0, da=document.getElementById('f-da').value, a=document.getElementById('f-a').value; if(n && v>0 && da && a) { db.f.push({n, v, da, a, id:Date.now()}); up(); alert("Salvata!"); } }
@@ -221,11 +239,7 @@
     function exportD() { document.getElementById('back').value = JSON.stringify(db); alert("Backup generato!"); }
     function importD() { try { db = JSON.parse(document.getElementById('back').value); up(); location.reload(); } catch(e) { alert("Errore!"); }}
 
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(reg => console.log('SW OK')).catch(err => console.log('SW KO'));
-      });
-    }
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').then(reg => console.log('SW OK')).catch(err => console.log('SW KO')); }); }
 </script>
 </body>
 </html>
