@@ -6,11 +6,9 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#1a1c2c">
-    
     <link rel="manifest" href="manifest.json">
     <link rel="icon" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/2489/2489796.png">
-    
-    <title>Stipendio V6.9</title>
+    <title>Stipendio V7.0</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -20,21 +18,10 @@
         .page { display: none; padding: 15px; }
         .page.active { display: block; }
         .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--accent); position: relative; }
-        
-        /* NAVBAR FIX - SCROLL 3 A 3 E BARRA INVISIBILE */
-        .navbar { 
-            position: fixed; bottom: 0; left: 0; width: 100%; background: #161b33; 
-            display: flex; height: 75px; border-top: 1px solid #34495e; z-index: 1000; 
-            overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; 
-        }
+        .navbar { position: fixed; bottom: 0; left: 0; width: 100%; background: #161b33; display: flex; height: 75px; border-top: 1px solid #34495e; z-index: 1000; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .navbar::-webkit-scrollbar { display: none !important; }
-        .nav-item { 
-            flex: 0 0 33.33%; scroll-snap-align: start; display: flex; align-items: center; 
-            justify-content: center; font-size: 13px; font-weight: bold; cursor: pointer; 
-            color: #7f8c8d; text-transform: uppercase; border-right: 1px solid #252a41; box-sizing: border-box; 
-        }
+        .nav-item { flex: 0 0 33.33%; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; cursor: pointer; color: #7f8c8d; text-transform: uppercase; border-right: 1px solid #252a41; box-sizing: border-box; }
         .nav-item.active { color: var(--accent); background: #1c223d; border-bottom: 4px solid var(--accent); }
-
         input, select { width: 100%; padding: 12px; margin: 5px 0; background: #161b33; border: 1px solid #34495e; color: white; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
         .btn-blue { background: var(--accent); } .btn-green { background: var(--green); } .btn-red { background: var(--red); }
@@ -43,6 +30,7 @@
         .del-btn { background: var(--red); border: none; color: white; padding: 8px 14px; border-radius: 6px; font-size: 14px; }
         #netto-big { font-size: 35px; text-align: center; color: var(--green); font-weight: bold; margin: 10px 0; }
         .tot-mese { text-align: right; font-size: 18px; color: var(--red); font-weight: bold; margin-bottom: 10px; }
+        .label-fissa { font-size: 11px; color: #bdc3c7; display: block; }
     </style>
 </head>
 <body>
@@ -75,10 +63,17 @@
 </div>
 
 <div id="bilancio" class="page">
-    <h2 style="text-align:center;">⚖️ BILANCIO ANNUALE</h2>
-    <select id="b-a" onchange="renderB()"><option>2026</option><option>2027</option><option>2028</option></select>
+    <h2 style="text-align:center;">⚖️ BILANCIO</h2>
+    <div style="display:flex; gap:5px;">
+        <select id="b-m" onchange="renderB()"><option>Gennaio</option><option>Febbraio</option><option>Marzo</option><option>Aprile</option><option>Maggio</option><option>Giugno</option><option>Luglio</option><option>Agosto</option><option>Settembre</option><option>Ottobre</option><option>Novembre</option><option>Dicembre</option></select>
+        <select id="b-a" onchange="renderB()"><option>2026</option><option>2027</option><option>2028</option></select>
+    </div>
     <div id="b-res"></div>
-    <div class="card" style="height: 280px;"><canvas id="pieChart"></canvas></div>
+    <button class="btn btn-blue" id="btn-toggle-anno" onclick="toggleBilancioAnno()">📊 MOSTRA TOTALE ANNUALE</button>
+    <div id="b-anno-area" style="display:none; margin-top:15px;">
+        <div id="b-res-anno"></div>
+        <div class="card" style="height: 280px;"><canvas id="pieChart"></canvas></div>
+    </div>
 </div>
 
 <div id="andamento" class="page">
@@ -144,10 +139,18 @@
     }
 
     function addV() { const v=parseFloat(document.getElementById('sv').value)||0, n=document.getElementById('sn').value, m=document.getElementById('sv-m').value, a=document.getElementById('sv-a').value; if(v>0) { db.v.push({v, n, m, a, id:Date.now()}); up(); renderV(); } }
+    
     function renderV() {
         const yr = parseInt(document.getElementById('sv-a').value), selM = document.getElementById('sv-m').value, mtIdx = mesiArr.indexOf(selM);
         let tot = 0; let htmlV = db.v.filter(x=>x.a==yr && x.m==selM).map(x=>{ tot += x.v; return `<div class="card row-item"><span>${x.n}: <b>€${x.v.toFixed(2)}</b></span><button class="del-btn" onclick="delItem('v', ${x.id})">🗑️</button></div>`; }).join('');
-        let htmlF = ""; let countF = 0; let idsF = []; db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, mtIdx, 2); if(c>=s && c<=e) { tot+=f.v; countF++; idsF.push(f.id); htmlF+=`<div class="card row-item" style="border-left-color: var(--accent);"><span>📌 ${f.n}: <b>€${f.v.toFixed(2)}</b></span><button class="del-btn" onclick="delItem('f', ${f.id})">🗑️</button></div>`; }});
+        let htmlF = ""; let countF = 0; let idsF = []; 
+        db.f.forEach(f => { 
+            const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, mtIdx, 2); 
+            if(c>=s && c<=e) { 
+                tot+=f.v; countF++; idsF.push(f.id); 
+                htmlF+=`<div class="card row-item" style="border-left-color: var(--accent);"><div><span>📌 ${f.n}: <b>€${f.v.toFixed(2)}</b></span><span class="label-fissa">Durata: ${f.da} al ${f.a}</span></div><button class="del-btn" onclick="delItem('f', ${f.id})">🗑️</button></div>`; 
+            }
+        });
         document.getElementById('list-v').innerHTML = htmlV; 
         document.getElementById('list-f').innerHTML = countF > 0 ? `<button class="btn btn-red" style="padding:10px; font-size:12px; margin-bottom:10px; width:100%;" onclick="delMultipleF([${idsF}])">🗑️ SVUOTA FISSE DEL MESE</button>` + htmlF : htmlF;
         document.getElementById('fixed-header').style.display = countF>0?'flex':'none'; document.getElementById('tot-uscita').innerText = "Totale Mese: € "+tot.toFixed(2);
@@ -156,34 +159,71 @@
     function toggleFixed() { const e=document.getElementById('list-f'); e.style.display=e.style.display==='block'?'none':'block'; }
 
     function renderB() {
-        const yr = document.getElementById('b-a').value, ent = db.s.filter(x=>x.a===yr).reduce((a,b)=>a+b.v,0);
+        const yr = document.getElementById('b-a').value, selM = document.getElementById('b-m').value;
+        const mtIdx = mesiArr.indexOf(selM);
+        
+        // BILANCIO MENSILE
+        const entM = db.s.filter(x => x.m === selM && x.a === yr).reduce((a,b) => a+b.v, 0);
+        let uscM_V = db.v.filter(x => x.m === selM && x.a === yr).reduce((a,b) => a+b.v, 0);
+        let uscM_F = 0; db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, mtIdx, 2); if(c>=s && c<=e) uscM_F += f.v; });
+        const totUM = uscM_V + uscM_F;
+        document.getElementById('b-res').innerHTML = `<div class="card" style="border-left-color: var(--green);"><b>BILANCIO ${selM.toUpperCase()} ${yr}</b><br><br>Entrate: €${entM.toLocaleString('it-IT')}<br>Uscite: €${totUM.toLocaleString('it-IT')}<hr>RESIDUO: <b>€${(entM-totUM).toLocaleString('it-IT')}</b></div>`;
+
+        // BILANCIO ANNUALE (calcolato ma mostrato solo al toggle)
+        const entY = db.s.filter(x=>x.a===yr).reduce((a,b)=>a+b.v,0);
         let uscV = db.v.filter(x=>x.a===yr).reduce((a,b)=>a+b.v,0), uscF = 0;
         for(let i=0; i<12; i++) { db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, i, 2); if(c>=s && c<=e) uscF+=f.v; }); }
-        const totU = uscV+uscF; document.getElementById('b-res').innerHTML = `<div class="card">Entrate: €${ent.toLocaleString()}<br>Uscite: €${totU.toLocaleString()}<hr>RISPARMIO: €${(ent-totU).toLocaleString()}</div>`;
+        const totU = uscV+uscF;
+        document.getElementById('b-res-anno').innerHTML = `<div class="card"><b>RIEPILOGO ANNUALE ${yr}</b><br><br>Entrate Totali: €${entY.toLocaleString()}<br>Uscite Totali: €${totU.toLocaleString()}<hr>RISPARMIO: €${(entY-totU).toLocaleString()}</div>`;
+        
         const ctxP = document.getElementById('pieChart').getContext('2d'); if(window.pChart) window.pChart.destroy();
-        window.pChart = new Chart(ctxP, { type: 'pie', data: { labels: ['Uscite', 'Risparmio'], datasets: [{ data: [totU, Math.max(0, ent-totU)], backgroundColor: ['#e74c3c', '#2ecc71'] }] }, options: { maintainAspectRatio: false, plugins: { datalabels: { color: '#fff', font: { weight: 'bold', size: 14 }, formatter: (v, ctx) => { let s=0; ctx.chart.data.datasets[0].data.map(d=>s+=d); return s>0? (v*100/s).toFixed(1)+"%" : "0%"; } } } } });
+        window.pChart = new Chart(ctxP, { type: 'pie', data: { labels: ['Uscite', 'Risparmio'], datasets: [{ data: [totU, Math.max(0, entY-totU)], backgroundColor: ['#e74c3c', '#2ecc71'] }] }, options: { maintainAspectRatio: false, plugins: { datalabels: { color: '#fff', font: { weight: 'bold', size: 14 }, formatter: (v, ctx) => { let s=0; ctx.chart.data.datasets[0].data.map(d=>s+=d); return s>0? (v*100/s).toFixed(1)+"%" : "0%"; } } } } });
+    }
+
+    function toggleBilancioAnno() {
+        const area = document.getElementById('b-anno-area');
+        const btn = document.getElementById('btn-toggle-anno');
+        if(area.style.display === 'none') { area.style.display = 'block'; btn.innerText = "HIDE TOTALI ANNO"; }
+        else { area.style.display = 'none'; btn.innerText = "📊 MOSTRA TOTALE ANNUALE"; }
     }
 
     function initChart() {
         const ctx = document.getElementById('myChart').getContext('2d'), yr = document.getElementById('chart-a').value;
         if(window.chartObj) window.chartObj.destroy();
         const labels = mesiArr.slice(0,12);
-        const dEnt = labels.map(m => { const e = db.s.find(x => x.m === m && x.a === yr); return e ? e.v : 0; });
-        const dUsc = labels.map((m, i) => { let uV = db.v.filter(v=>v.m===m && v.a===yr).reduce((a,b)=>a+b.v,0), uF=0; db.f.forEach(f=>{ const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, i, 2); if(c>=s && c<=e) uF+=f.v; }); return uV+uF; });
-        window.chartObj = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: 'Entrate', data: dEnt, borderColor: '#2ecc71', backgroundColor: '#2ecc71', tension: 0.3, pointRadius: 5 }, { label: 'Uscite', data: dUsc, borderColor: '#e74c3c', backgroundColor: '#e74c3c', tension: 0.3, pointRadius: 5 }] }, options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } }, datalabels: { align: 'top', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: (v) => v > 0 ? '€' + v.toFixed(0) : '' } }, scales: { y: { ticks: { color: '#fff' }, grid: { color: '#34495e' } }, x: { ticks: { color: '#fff' }, grid: { color: '#34495e' } } } } });
+        
+        let dEnt = [], dUsc = [];
+        let lastFilledIndex = -1;
+
+        labels.forEach((m, i) => {
+            const e = db.s.find(x => x.m === m && x.a === yr);
+            let uV = db.v.filter(v=>v.m===m && v.a===yr).reduce((a,b)=>a+b.v,0), uF=0;
+            db.f.forEach(f=>{ const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, i, 2); if(c>=s && c<=e) uF+=f.v; });
+            
+            const valEnt = e ? e.v : 0;
+            const valUsc = uV+uF;
+
+            if(valEnt > 0 || valUsc > 0) lastFilledIndex = i;
+            dEnt.push(valEnt);
+            dUsc.push(valUsc);
+        });
+
+        // Tagliamo i dati all'ultimo mese che ha valori per evitare il crollo a zero
+        const cleanLabels = labels.slice(0, lastFilledIndex + 1);
+        const cleanEnt = dEnt.slice(0, lastFilledIndex + 1);
+        const cleanUsc = dUsc.slice(0, lastFilledIndex + 1);
+
+        window.chartObj = new Chart(ctx, { type: 'line', data: { labels: cleanLabels, datasets: [{ label: 'Entrate', data: cleanEnt, borderColor: '#2ecc71', backgroundColor: '#2ecc71', tension: 0.3, pointRadius: 5 }, { label: 'Uscite', data: cleanUsc, borderColor: '#e74c3c', backgroundColor: '#e74c3c', tension: 0.3, pointRadius: 5 }] }, options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } }, datalabels: { align: 'top', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: (v) => v > 0 ? '€' + v.toFixed(0) : '' } }, scales: { y: { ticks: { color: '#fff' }, grid: { color: '#34495e' } }, x: { ticks: { color: '#fff' }, grid: { color: '#34495e' } } } } });
     }
 
     function addF() { const n=document.getElementById('f-n').value, v=parseFloat(document.getElementById('f-v').value)||0, da=document.getElementById('f-da').value, a=document.getElementById('f-a').value; if(n && v>0 && da && a) { db.f.push({n, v, da, a, id:Date.now()}); up(); alert("Salvata!"); } }
-    function delItem(t, id) { if(confirm("Eliminare?")) { db[t] = db[t].filter(x=>x.id!==id); up(); renderS(); renderV(); }}
+    function delItem(t, id) { if(confirm("Eliminare?")) { db[t] = db[t].filter(x=>x.id!==id); up(); renderS(); renderV(); renderB(); }}
     function exportD() { document.getElementById('back').value = JSON.stringify(db); alert("Backup generato!"); }
     function importD() { try { db = JSON.parse(document.getElementById('back').value); up(); location.reload(); } catch(e) { alert("Errore!"); }}
 
-    // Registrazione Service Worker per l'installazione
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('SW Registrato!'))
-          .catch(err => console.log('Errore SW:', err));
+        navigator.serviceWorker.register('sw.js').then(reg => console.log('SW OK')).catch(err => console.log('SW KO'));
       });
     }
 </script>
