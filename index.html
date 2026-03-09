@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#1a1c2c">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/2489/2489796.png">
-    <title>Stipendio V7.4</title>
+    <title>Stipendio V7.5</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -155,7 +155,23 @@
         let uscM_V = db.v.filter(x => x.m === selM && x.a === yr).reduce((a,b) => a+b.v, 0);
         let uscM_F = 0; db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, mtIdx, 2); if(c>=s && c<=e) uscM_F += f.v; });
         const totUM = uscM_V + uscM_F;
-        document.getElementById('b-res').innerHTML = `<div class="card"><b>BILANCIO ${selM.toUpperCase()}</b><br>Entrate: €${entM.toLocaleString()}<br>Uscite: €${totUM.toLocaleString()}<hr>RESIDUO: <b>€${(entM-totUM).toLocaleString()}</b></div>`;
+        const diffEntFisse = entM - uscM_F;
+
+        document.getElementById('b-res').innerHTML = `
+            <div class="card" style="border-left-color: #f1c40f;">
+                <b>DETTAGLIO RAPIDO ${selM.toUpperCase()}</b><br>
+                Entrate: €${entM.toLocaleString('it-IT', {minimumFractionDigits: 2})}<br>
+                Spese Fisse: €${uscM_F.toLocaleString('it-IT', {minimumFractionDigits: 2})}<br>
+                <hr>
+                <b>NETTO DISPONIBILE: €${diffEntFisse.toLocaleString('it-IT', {minimumFractionDigits: 2})}</b>
+            </div>
+            <div class="card" style="border-left-color: var(--green);">
+                <b>BILANCIO FINALE</b><br>
+                Uscite Variabili: €${uscM_V.toLocaleString('it-IT', {minimumFractionDigits: 2})}<br>
+                <hr>
+                RESIDUO REALE: <b>€${(entM-totUM).toLocaleString('it-IT', {minimumFractionDigits: 2})}</b>
+            </div>`;
+
         const entY = db.s.filter(x=>x.a===yr).reduce((a,b)=>a+b.v,0);
         let uscV = db.v.filter(x=>x.a===yr).reduce((a,b)=>a+b.v,0), uscF = 0;
         for(let i=0; i<12; i++) { db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, i, 2); if(c>=s && c<=e) uscF+=f.v; }); }
@@ -173,7 +189,6 @@
         let dEnt = [], dUsc = [], finalLabels = [];
         let ultimoMeseStip = -1, ultimoMeseUsc = -1;
 
-        // Analisi per trovare gli ultimi mesi con dati
         labelsMesi.forEach((m, i) => {
             const e = db.s.find(x => x.m === m && x.a === yr);
             let uV = db.v.filter(v => v.m === m && v.a === yr).reduce((a, b) => a + b.v, 0), uF = 0;
@@ -190,9 +205,7 @@
             const e = db.s.find(x => x.m === m && x.a === yr);
             let uV = db.v.filter(v => v.m === m && v.a === yr).reduce((a, b) => a + b.v, 0), uF = 0;
             db.f.forEach(f => { const s = new Date(f.da + "T00:00:00"), eD = new Date(f.a + "T23:59:59"), c = new Date(yr, i, 2); if(c >= s && c <= eD) uF += f.v; });
-            
             finalLabels.push(m);
-            // Se i > ultimoMeseStip, mettiamo null per non far crollare la linea verde
             dEnt.push(i <= ultimoMeseStip ? (e ? e.v : 0) : null);
             dUsc.push(uV + uF);
         }
