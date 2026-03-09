@@ -3,266 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WebAppStipendio V7.6</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1a1c2c">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/2489/2489796.png">
+    <title>Stipendio V7.5</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root {
-            --bg: #f4f7f6;
-            --primary: #2c3e50;
-            --secondary: #34495e;
-            --accent: #e74c3c;
-            --success: #27ae60;
-            --white: #ffffff;
-            --shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); margin: 0; padding-bottom: 70px; color: var(--primary); }
-        
-        .header { background: var(--primary); color: var(--white); padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; }
-
-        .container { padding: 15px; max-width: 600px; margin: auto; }
-        .card { background: var(--white); padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 15px; }
-
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--white); display: flex; justify-content: space-around; padding: 10px; border-top: 2px solid #ddd; z-index: 1000; }
-        .nav-item { border: none; background: none; font-size: 0.8rem; cursor: pointer; color: var(--secondary); display: flex; flex-direction: column; align-items: center; }
-        .nav-item.active { color: var(--accent); font-weight: bold; }
-        .nav-item i { font-size: 1.5rem; margin-bottom: 2px; }
-
-        .input-group { margin-bottom: 12px; }
-        label { display: block; font-size: 0.9rem; margin-bottom: 5px; font-weight: 600; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
-        
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; }
-        .btn-add { background: var(--success); color: var(--white); }
-        .btn-del { background: var(--accent); color: var(--white); padding: 5px 10px; width: auto; font-size: 0.8rem; }
-
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
-        .list-item:last-child { border-bottom: none; }
-
-        .summary-box { background: #fff3cd; padding: 15px; border-left: 5px solid #ffc107; border-radius: 8px; margin-bottom: 15px; }
-        .res-real { background: #d4edda; border-left-color: #28a745; margin-top: 10px; }
-
-        /* Accordion Style */
-        .accordion { background: #eee; color: #444; cursor: pointer; padding: 12px; width: 100%; text-align: left; border: none; outline: none; transition: 0.4s; border-radius: 8px; margin-top: 10px; font-weight: bold; display: flex; justify-content: space-between; }
-        .active-acc, .accordion:hover { background: #ddd; }
-        .panel { padding: 0 10px; background-color: white; display: none; overflow: hidden; border: 1px solid #eee; border-radius: 0 0 8px 8px; }
-
-        #chartCanvas { max-width: 100%; height: 250px; }
-        .hidden { display: none; }
+        :root { --bg: #1a1c2c; --card: #252a41; --accent: #3498db; --green: #2ecc71; --red: #e74c3c; --text: #ecf0f1; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 90px; overflow-x: hidden; }
+        .page { display: none; padding: 15px; }
+        .page.active { display: block; }
+        .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--accent); position: relative; }
+        .navbar { position: fixed; bottom: 0; left: 0; width: 100%; background: #161b33; display: flex; height: 75px; border-top: 1px solid #34495e; z-index: 1000; overflow-x: auto; scrollbar-width: none; }
+        .navbar::-webkit-scrollbar { display: none; }
+        .nav-item { flex: 0 0 33.33%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; cursor: pointer; color: #7f8c8d; text-transform: uppercase; border-right: 1px solid #252a41; box-sizing: border-box; }
+        .nav-item.active { color: var(--accent); background: #1c223d; border-bottom: 4px solid var(--accent); }
+        input, select { width: 100%; padding: 12px; margin: 5px 0; background: #161b33; border: 1px solid #34495e; color: white; border-radius: 8px; font-size: 16px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; color: white; }
+        .btn-blue { background: var(--accent); } .btn-green { background: var(--green); } .btn-red { background: var(--red); }
+        .header-click { display: flex; justify-content: space-between; align-items: center; background: #2c3e50; padding: 12px; border-radius: 8px; cursor: pointer; border-left: 5px solid var(--accent); margin-bottom: 10px; }
+        .row-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #34495e; }
+        .del-btn { background: var(--red); border: none; color: white; padding: 8px 14px; border-radius: 6px; }
+        #netto-big { font-size: 35px; text-align: center; color: var(--green); font-weight: bold; margin: 10px 0; }
+        .tot-mese { text-align: right; font-size: 18px; color: var(--red); font-weight: bold; margin-bottom: 10px; }
+        .label-fissa { font-size: 11px; color: #bdc3c7; display: block; }
     </style>
 </head>
 <body>
 
-    <div class="header" id="headerTitle">Dashboard</div>
+<div id="stipendi" class="page active">
+    <h2 style="text-align:center;">💰 CALCOLO STIPENDIO</h2>
+    <div class="card">
+        <div style="display:flex; gap:5px;"><select id="m"><option>Gennaio</option><option selected>Febbraio</option><option>Marzo</option><option>Aprile</option><option>Maggio</option><option>Giugno</option><option>Luglio</option><option>Agosto</option><option>Settembre</option><option>Ottobre</option><option>Novembre</option><option>Dicembre</option><option>13° Mensilità</option></select><select id="a"><option selected>2026</option><option>2027</option><option>2028</option></select></div>
+        <input type="number" id="o" placeholder="Ore Totali" oninput="cal()"><input type="number" id="t" placeholder="Ore Trasferta (20€)" oninput="cal()"><input type="number" id="k" value="102.30" oninput="cal()">
+        <div id="netto-big">€ 0,00</div><button class="btn btn-green" onclick="saveS()">💾 SALVA IN ENTRATE</button>
+    </div>
+</div>
 
-    <div id="content" class="container"></div>
+<div id="spese" class="page">
+    <h2 style="text-align:center;">💸 USCITE MENSILI</h2>
+    <div class="card">
+        <div style="display:flex; gap:5px;"><select id="sv-m" onchange="renderV()"><option>Gennaio</option><option>Febbraio</option><option>Marzo</option><option>Aprile</option><option>Maggio</option><option>Giugno</option><option>Luglio</option><option>Agosto</option><option>Settembre</option><option>Ottobre</option><option>Novembre</option><option>Dicembre</option></select><select id="sv-a" onchange="renderV()"><option selected>2026</option><option>2027</option><option>2028</option></select></div>
+        <input type="text" id="sn" placeholder="Causale"><input type="number" id="sv" placeholder="Importo €"><button class="btn btn-red" onclick="addV()">➕ AGGIUNGI SPESA</button>
+    </div>
+    <div id="tot-uscita" class="tot-mese"></div>
+    <div id="fixed-header" class="header-click" onclick="toggleFixed()" style="display:none; margin-bottom:0;"><span>📌 SPESE FISSE</span><span>▼</span></div>
+    <div id="list-f" style="display:none; background: rgba(52, 152, 219, 0.08); padding: 10px; border-radius: 0 0 8px 8px; border: 1px solid #34495e;"></div>
+    <div id="list-v" style="margin-top:10px;"></div>
+</div>
 
-    <nav class="nav-bar">
-        <button class="nav-item active" onclick="showTab('home')"><i>🏠</i>Home</button>
-        <button class="nav-item" onclick="showTab('entrate')"><i>💰</i>Entrate</button>
-        <button class="nav-item" onclick="showTab('spese')"><i>📉</i>Spese</button>
-        <button class="nav-item" onclick="showTab('bilancio')"><i>📊</i>Bilancio</button>
-        <button class="nav-item" onclick="showTab('setup')"><i>⚙️</i>Setup</button>
-    </nav>
+<div id="archivio" class="page">
+    <h2 style="text-align:center;">📂 ENTRATE</h2>
+    <button class="btn btn-blue" onclick="downloadPDF()" style="margin-bottom:15px;">📄 PDF PROFESSIONALE</button>
+    <div id="list-s"></div>
+</div>
 
-    <script>
-        let db = JSON.parse(localStorage.getItem('stipendioDB')) || { s: [], v: [], f: [] };
+<div id="bilancio" class="page">
+    <h2 style="text-align:center;">⚖️ BILANCIO</h2>
+    <div style="display:flex; gap:5px;">
+        <select id="b-m" onchange="renderB()"><option>Gennaio</option><option>Febbraio</option><option>Marzo</option><option>Aprile</option><option>Maggio</option><option>Giugno</option><option>Luglio</option><option>Agosto</option><option>Settembre</option><option>Ottobre</option><option>Novembre</option><option>Dicembre</option></select>
+        <select id="b-a" onchange="renderB()"><option selected>2026</option><option>2027</option><option>2028</option></select>
+    </div>
+    <div id="b-res"></div>
+    <button class="btn btn-blue" id="btn-toggle-anno" onclick="toggleBilancioAnno()">📊 MOSTRA TOTALE ANNUALE</button>
+    <div id="b-anno-area" style="display:none; margin-top:15px;">
+        <div id="b-res-anno"></div>
+        <div class="card" style="height: 280px;"><canvas id="pieChart"></canvas></div>
+    </div>
+</div>
 
-        function save() { localStorage.setItem('stipendioDB', JSON.stringify(db)); }
+<div id="andamento" class="page">
+    <h2 style="text-align:center;">📈 ANDAMENTO</h2>
+    <select id="chart-a" onchange="initChart()"><option selected>2026</option><option>2027</option><option>2028</option></select>
+    <div class="card" style="height: 350px;"><canvas id="myChart"></canvas></div>
+</div>
 
-        function showTab(tab) {
-            const content = document.getElementById('content');
-            const title = document.getElementById('headerTitle');
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            event?.currentTarget?.classList.add('active');
+<div id="setup" class="page">
+    <h2 style="text-align:center;">⚙️ SETUP</h2>
+    <div class="card"><h3>🏠 Aggiungi Spesa Fissa</h3><input type="text" id="f-n" placeholder="Nome"><input type="number" id="f-v" placeholder="€/mese"><div style="display:flex; gap:5px;"><input type="date" id="f-da"><input type="date" id="f-a"></div><button class="btn btn-blue" onclick="addF()">💾 SALVA FISSA</button></div>
+    <div class="card"><h3>🔄 Backup / Ripristino</h3><textarea id="back" placeholder="Codice backup..." style="height:80px; font-size:10px; width:100%; background:#161b33; color:white; border-radius:8px; padding:5px; border:1px solid #34495e;"></textarea><div style="display:flex; gap:5px;"><button class="btn btn-blue" style="flex:1" onclick="exportD()">📄 GENERA</button><button class="btn btn-green" style="flex:1" onclick="importD()">📥 CARICA</button></div></div>
+    <div class="card" style="border-left-color: var(--red);"><h3>⚠️ Pericolo</h3><button class="btn btn-red" onclick="hardReset()">⚠️ CANCELLA TUTTO IL DATABASE</button></div>
+</div>
 
-            if (tab === 'home') {
-                title.innerText = "Andamento Annuale";
-                content.innerHTML = `<div class="card"><canvas id="chartCanvas"></canvas></div>`;
-                renderChart();
+<nav class="navbar">
+    <div class="nav-item active" onclick="nav('stipendi',this)">Stipendi</div>
+    <div class="nav-item" onclick="nav('spese',this)">Spese</div>
+    <div class="nav-item" onclick="nav('archivio',this)">Entrate</div>
+    <div class="nav-item" onclick="nav('bilancio',this)">Bilancio</div>
+    <div class="nav-item" onclick="nav('andamento',this)">Andamento</div>
+    <div class="nav-item" onclick="nav('setup',this)">Setup</div>
+</nav>
+
+<script>
+    Chart.register(ChartDataLabels);
+    let db = JSON.parse(localStorage.getItem('stip_db_v4')) || {s:[], v:[], f:[]};
+    const mesiArr = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre","13° Mensilità"];
+
+    function nav(id, el) {
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+        el.classList.add('active');
+        if(id==='archivio') renderS(); if(id==='spese') renderV(); if(id==='bilancio') renderB(); if(id==='andamento') initChart();
+    }
+    function up() { localStorage.setItem('stip_db_v4', JSON.stringify(db)); }
+    function hardReset() { if(confirm("Cancellare tutto il database?")) { localStorage.removeItem('stip_db_v4'); location.reload(); } }
+    
+    function cal() { const o=parseFloat(document.getElementById('o').value)||0, t=parseFloat(document.getElementById('t').value)||0, k=parseFloat(document.getElementById('k').value)||0; const res = ((o*14.94272)*0.7030)+(t*20)+k+244.83-21.40; document.getElementById('netto-big').innerText="€ "+res.toLocaleString('it-IT',{minimumFractionDigits:2}); return res; }
+    function saveS() { db.s.push({m:document.getElementById('m').value, a:document.getElementById('a').value, v:cal(), id:Date.now()}); up(); alert("Salvato!"); }
+    
+    function renderS() { 
+        const c = document.getElementById('list-s'); const yrs = [...new Set(db.s.map(x => x.a))].sort().reverse(); 
+        c.innerHTML = yrs.map(y => `<div class="header-click" onclick="toggleArch('${y}')"><span><b>${y} - TOT: € ${db.s.filter(x=>x.a===y).reduce((a,b)=>a+b.v,0).toLocaleString()}</b></span><div><button class="del-btn" onclick="event.stopPropagation(); delY('${y}')">🗑️</button> <span>▼</span></div></div><div id="arch-${y}" style="display:none;">${db.s.filter(x=>x.a===y).map(x=>`<div class="card row-item"><span>${x.m}: <b>€${x.v.toFixed(2)}</b></span><button class="del-btn" onclick="delItem('s', ${x.id})">🗑️</button></div>`).join('')}</div>`).join(''); 
+    }
+    function delY(y) { if(confirm("Eliminare intero anno "+y+"?")) { db.s = db.s.filter(x=>x.a!==y); up(); renderS(); }}
+    function toggleArch(y) { const e = document.getElementById('arch-'+y); e.style.display = e.style.display==='none'?'block':'none'; }
+
+    function downloadPDF() {
+        const yrs = [...new Set(db.s.map(x => x.a))].sort().reverse();
+        if(yrs.length === 0) return;
+        let htmlContent = `<div style="padding:20px; font-family:Arial; color:#000;"><h1 style="text-align:center; border-bottom:2px solid #3498db;">RECONTO ENTRATE</h1>`;
+        yrs.forEach(y => {
+            const entAnno = db.s.filter(x => x.a === y);
+            htmlContent += `<h2>Anno: ${y}</h2><table style="width:100%; border-collapse:collapse;"><tbody>`;
+            entAnno.forEach(x => { htmlContent += `<tr><td style="border:1px solid #ddd; padding:8px;">${x.m}</td><td style="border:1px solid #ddd; padding:8px; text-align:right;">€ ${x.v.toLocaleString()}</td></tr>`; });
+            htmlContent += `</tbody></table>`;
+        });
+        html2pdf().from(htmlContent + `</div>`).save();
+    }
+
+    function addV() { const v=parseFloat(document.getElementById('sv').value)||0, n=document.getElementById('sn').value, m=document.getElementById('sv-m').value, a=document.getElementById('sv-a').value; if(v>0) { db.v.push({v, n, m, a, id:Date.now()}); up(); renderV(); } }
+    function renderV() {
+        const yr = parseInt(document.getElementById('sv-a').value), selM = document.getElementById('sv-m').value, mtIdx = mesiArr.indexOf(selM);
+        let tot = 0; let htmlV = db.v.filter(x=>x.a==yr && x.m==selM).map(x=>{ tot += x.v; return `<div class="card row-item"><span>${x.n}: <b>€${x.v.toFixed(2)}</b></span><button class="del-btn" onclick="delItem('v', ${x.id})">🗑️</button></div>`; }).join('');
+        let htmlF = ""; let countF = 0; let idsF = []; 
+        db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, mtIdx, 2); if(c>=s && c<=e) { tot+=f.v; countF++; idsF.push(f.id); htmlF+=`<div class="card row-item" style="border-left-color: var(--accent);"><div><span>📌 ${f.n}: <b>€${f.v.toFixed(2)}</b></span><span class="label-fissa">${f.da} / ${f.a}</span></div><button class="del-btn" onclick="delItem('f', ${f.id})">🗑️</button></div>`; }});
+        document.getElementById('list-v').innerHTML = htmlV; 
+        document.getElementById('list-f').innerHTML = countF > 0 ? `<button class="btn btn-red" onclick="delMultipleF([${idsF}])">🗑️ SVUOTA FISSE</button>` + htmlF : htmlF;
+        document.getElementById('fixed-header').style.display = countF>0?'flex':'none'; document.getElementById('tot-uscita').innerText = "Totale Mese: € "+tot.toFixed(2);
+    }
+    function delMultipleF(ids) { if(confirm("Eliminare fisse?")) { db.f = db.f.filter(f => !ids.includes(f.id)); up(); renderV(); }}
+    function toggleFixed() { const e=document.getElementById('list-f'); e.style.display=e.style.display==='block'?'none':'block'; }
+
+    function renderB() {
+        const yr = document.getElementById('b-a').value, selM = document.getElementById('b-m').value, mtIdx = mesiArr.indexOf(selM);
+        const entM = db.s.filter(x => x.m === selM && x.a === yr).reduce((a,b) => a+b.v, 0);
+        let uscM_V = db.v.filter(x => x.m === selM && x.a === yr).reduce((a,b) => a+b.v, 0);
+        let uscM_F = 0; db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, mtIdx, 2); if(c>=s && c<=e) uscM_F += f.v; });
+        const totUM = uscM_V + uscM_F;
+        const diffEntFisse = entM - uscM_F;
+
+        document.getElementById('b-res').innerHTML = `
+            <div class="card" style="border-left-color: #f1c40f;">
+                <b>DETTAGLIO RAPIDO ${selM.toUpperCase()}</b><br>
+                Entrate: €${entM.toLocaleString('it-IT', {minimumFractionDigits: 2})}<br>
+                Spese Fisse: €${uscM_F.toLocaleString('it-IT', {minimumFractionDigits: 2})}<br>
+                <hr>
+                <b>NETTO DISPONIBILE: €${diffEntFisse.toLocaleString('it-IT', {minimumFractionDigits: 2})}</b>
+            </div>
+            <div class="card" style="border-left-color: var(--green);">
+                <b>BILANCIO FINALE</b><br>
+                Uscite Variabili: €${uscM_V.toLocaleString('it-IT', {minimumFractionDigits: 2})}<br>
+                <hr>
+                RESIDUO REALE: <b>€${(entM-totUM).toLocaleString('it-IT', {minimumFractionDigits: 2})}</b>
+            </div>`;
+
+        const entY = db.s.filter(x=>x.a===yr).reduce((a,b)=>a+b.v,0);
+        let uscV = db.v.filter(x=>x.a===yr).reduce((a,b)=>a+b.v,0), uscF = 0;
+        for(let i=0; i<12; i++) { db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, i, 2); if(c>=s && c<=e) uscF+=f.v; }); }
+        const totU = uscV+uscF;
+        document.getElementById('b-res-anno').innerHTML = `<div class="card"><b>ANNO ${yr}</b><br>Entrate: €${entY.toLocaleString()}<br>Uscite: €${totU.toLocaleString()}<hr>RISPARMIO: €${(entY-totU).toLocaleString()}</div>`;
+        const ctxP = document.getElementById('pieChart').getContext('2d'); if(window.pChart) window.pChart.destroy();
+        window.pChart = new Chart(ctxP, { type: 'pie', data: { labels: ['Uscite', 'Risparmio'], datasets: [{ data: [totU, Math.max(0, entY-totU)], backgroundColor: ['#e74c3c', '#2ecc71'] }] }, options: { maintainAspectRatio: false, plugins: { datalabels: { color: '#fff', formatter: (v, ctx) => { let s=0; ctx.chart.data.datasets[0].data.map(d=>s+=d); return s>0? (v*100/s).toFixed(1)+"%" : "0%"; } } } } });
+    }
+    function toggleBilancioAnno() { const a=document.getElementById('b-anno-area'); a.style.display=a.style.display==='none'?'block':'none'; }
+
+    function initChart() {
+        const ctx = document.getElementById('myChart').getContext('2d'), yr = document.getElementById('chart-a').value;
+        if(window.chartObj) window.chartObj.destroy();
+        const labelsMesi = mesiArr.slice(0,12);
+        let dEnt = [], dUsc = [], finalLabels = [];
+        let ultimoMeseStip = -1, ultimoMeseUsc = -1;
+
+        labelsMesi.forEach((m, i) => {
+            const e = db.s.find(x => x.m === m && x.a === yr);
+            let uV = db.v.filter(v => v.m === m && v.a === yr).reduce((a, b) => a + b.v, 0), uF = 0;
+            db.f.forEach(f => { const s = new Date(f.da + "T00:00:00"), eD = new Date(f.a + "T23:59:59"), c = new Date(yr, i, 2); if(c >= s && c <= eD) uF += f.v; });
+            if (e) ultimoMeseStip = i;
+            if (uV + uF > 0) ultimoMeseUsc = i;
+        });
+
+        const fineGrafico = Math.max(ultimoMeseStip, ultimoMeseUsc);
+        if (fineGrafico === -1) return;
+
+        for (let i = 0; i <= fineGrafico; i++) {
+            const m = labelsMesi[i];
+            const e = db.s.find(x => x.m === m && x.a === yr);
+            let uV = db.v.filter(v => v.m === m && v.a === yr).reduce((a, b) => a + b.v, 0), uF = 0;
+            db.f.forEach(f => { const s = new Date(f.da + "T00:00:00"), eD = new Date(f.a + "T23:59:59"), c = new Date(yr, i, 2); if(c >= s && c <= eD) uF += f.v; });
+            finalLabels.push(m);
+            dEnt.push(i <= ultimoMeseStip ? (e ? e.v : 0) : null);
+            dUsc.push(uV + uF);
+        }
+
+        window.chartObj = new Chart(ctx, { 
+            type: 'line', 
+            data: { 
+                labels: finalLabels, 
+                datasets: [
+                    { label: 'Entrate', data: dEnt, borderColor: '#2ecc71', tension: 0.3, pointRadius: 5, spanGaps: false }, 
+                    { label: 'Uscite', data: dUsc, borderColor: '#e74c3c', tension: 0.3, pointRadius: 5 }
+                ] 
+            }, 
+            options: { 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { labels: { color: '#fff' } }, 
+                    datalabels: { align: 'top', color: '#fff', formatter: (v) => (v !== null && v > 0) ? '€' + Math.round(v) : '' } 
+                }, 
+                scales: { 
+                    y: { ticks: { color: '#fff' }, grid: { color: '#34495e' } }, 
+                    x: { ticks: { color: '#fff' }, grid: { color: '#34495e' } } 
+                } 
             } 
-            else if (tab === 'entrate') {
-                title.innerText = "Inserisci Ore/Stipendio";
-                content.innerHTML = `
-                    <div class="card">
-                        <div class="input-group"><label>Mese</label><select id="mS">${getMonths()}</select></div>
-                        <div class="input-group"><label>Anno</label><input type="number" id="aS" value="${new Date().getFullYear()}"></div>
-                        <div class="input-group"><label>Stipendio Netto (€)</label><input type="number" step="0.01" id="vS"></div>
-                        <button class="btn btn-add" onclick="addStipendio()">Salva Stipendio</button>
-                    </div>
-                    <div id="listaS"></div>`;
-                renderStipendi();
-            }
-            else if (tab === 'spese') {
-                title.innerText = "Inserisci Spesa Extra";
-                content.innerHTML = `
-                    <div class="card">
-                        <div class="input-group"><label>Nome Spesa</label><input type="text" id="nV"></div>
-                        <div class="input-group"><label>Importo (€)</label><input type="number" step="0.01" id="vV"></div>
-                        <div class="input-group"><label>Mese</label><select id="mV">${getMonths()}</select></div>
-                        <div class="input-group"><label>Anno</label><input type="number" id="aV" value="${new Date().getFullYear()}"></div>
-                        <button class="btn btn-add" onclick="addVariabile()">Aggiungi Spesa</button>
-                    </div>
-                    <button class="accordion" onclick="toggleAcc(this)">VEDI SPESE VARIABILI <span>▼</span></button>
-                    <div class="panel" id="listaV"></div>`;
-                renderVariabili();
-            }
-            else if (tab === 'bilancio') {
-                title.innerText = "Bilancio Mensile";
-                content.innerHTML = `
-                    <div class="card">
-                        <div class="input-group"><label>Seleziona Mese</label><select id="mB" onchange="renderBilancio()">${getMonths()}</select></div>
-                        <div class="input-group"><label>Seleziona Anno</label><input type="number" id="aB" value="${new Date().getFullYear()}" onchange="renderBilancio()"></div>
-                    </div>
-                    <div id="resBilancio"></div>`;
-                renderBilancio();
-            }
-            else if (tab === 'setup') {
-                title.innerText = "Configurazione Spese Fisse";
-                content.innerHTML = `
-                    <div class="card">
-                        <div class="input-group"><label>Nome Spesa Fissa</label><input type="text" id="nF"></div>
-                        <div class="input-group"><label>Importo (€)</label><input type="number" step="0.01" id="vF"></div>
-                        <div class="input-group"><label>Dal (Data Inizio)</label><input type="date" id="dfF"></div>
-                        <div class="input-group"><label>Al (Data Fine)</label><input type="date" id="afF"></div>
-                        <button class="btn btn-add" onclick="addFissa()">Aggiungi Fissa</button>
-                    </div>
-                    <button class="accordion" onclick="toggleAcc(this)">VEDI SPESE FISSE <span>▼</span></button>
-                    <div class="panel" id="listaF"></div>
-                    <div class="card" style="margin-top:20px;">
-                        <label>Backup (Copia/Incolla)</label>
-                        <textarea id="backData" style="width:100%; height:80px;"></textarea>
-                        <button class="btn" onclick="exportData()">GENERA BACKUP</button>
-                        <button class="btn" style="background:#34495e; color:white;" onclick="importData()">CARICA BACKUP</button>
-                        <button class="btn btn-del" style="width:100%; margin-top:10px;" onclick="pulisciTutto()">CANCELLA TUTTO IL DATABASE</button>
-                    </div>`;
-                renderFisse();
-            }
-        }
+        });
+    }
 
-        // Funzioni Core
-        function getMonths() { 
-            const m = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre","13° Mensilità"];
-            return m.map(mo => `<option value="${mo}">${mo}</option>`).join('');
-        }
+    function addF() { const n=document.getElementById('f-n').value, v=parseFloat(document.getElementById('f-v').value)||0, da=document.getElementById('f-da').value, a=document.getElementById('f-a').value; if(n && v>0 && da && a) { db.f.push({n, v, da, a, id:Date.now()}); up(); alert("Salvata!"); } }
+    function delItem(t, id) { if(confirm("Eliminare?")) { db[t] = db[t].filter(x=>x.id!==id); up(); renderS(); renderV(); renderB(); }}
+    function exportD() { document.getElementById('back').value = JSON.stringify(db); alert("Copia il codice!"); }
+    function importD() { try { db = JSON.parse(document.getElementById('back').value); up(); location.reload(); } catch(e) { alert("Errore!"); }}
 
-        function toggleAcc(el) {
-            el.classList.toggle("active-acc");
-            let panel = el.nextElementSibling;
-            panel.style.display = panel.style.display === "block" ? "none" : "block";
-        }
-
-        function addStipendio() {
-            const s = { m: document.getElementById('mS').value, a: document.getElementById('aS').value, v: parseFloat(document.getElementById('vS').value), id: Date.now() };
-            if(!s.v) return; db.s.push(s); save(); renderStipendi();
-        }
-
-        function addVariabile() {
-            const v = { n: document.getElementById('nV').value, v: parseFloat(document.getElementById('vV').value), m: document.getElementById('mV').value, a: document.getElementById('aV').value, id: Date.now() };
-            if(!v.v) return; db.v.push(v); save(); renderVariabili();
-        }
-
-        function addFissa() {
-            const f = { n: document.getElementById('nF').value, v: parseFloat(document.getElementById('vF').value), da: document.getElementById('dfF').value, a: document.getElementById('afF').value, id: Date.now() };
-            if(!f.v || !f.da || !f.a) return; db.f.push(f); save(); renderFisse();
-        }
-
-        function renderStipendi() {
-            const lista = document.getElementById('listaS');
-            lista.innerHTML = db.s.slice().reverse().map(x => `<div class="card list-item"><span>${x.m} ${x.a}: <b>€${x.v}</b></span><button class="btn-del" onclick="del('s',${x.id})">Elimina</button></div>`).join('');
-        }
-
-        function renderVariabili() {
-            const lista = document.getElementById('listaV');
-            lista.innerHTML = db.v.slice().reverse().map(x => `<div class="list-item"><span>${x.m} ${x.a} - ${x.n}: <b>€${x.v}</b></span><button class="btn-del" onclick="del('v',${x.id})">X</button></div>`).join('');
-        }
-
-        function renderFisse() {
-            const lista = document.getElementById('listaF');
-            lista.innerHTML = db.f.map(x => `<div class="list-item"><span>${x.n}: <b>€${x.v}</b></span><button class="btn-del" onclick="del('f',${x.id})">X</button></div>`).join('');
-        }
-
-        function del(type, id) { db[type] = db[type].filter(x => x.id !== id); save(); showTab(type === 's' ? 'entrate' : type === 'v' ? 'spese' : 'setup'); }
-
-        function renderBilancio() {
-            const m = document.getElementById('mB').value;
-            const a = document.getElementById('aB').value;
-            const res = document.getElementById('resBilancio');
-
-            const stip = db.s.find(x => x.m === m && x.a == a)?.v || 0;
-            const vari = db.v.filter(x => x.m === m && x.a == a).reduce((acc, x) => acc + x.v, 0);
-            
-            const dataRif = new Date(a, getMonthIndex(m), 15);
-            const fisse = db.f.filter(x => {
-                const da = new Date(x.da);
-                const a = new Date(x.a);
-                return dataRif >= da && dataRif <= a;
-            }).reduce((acc, x) => acc + x.v, 0);
-
-            const nettoDisp = stip - fisse;
-            const finale = nettoDisp - vari;
-
-            res.innerHTML = `
-                <div class="summary-box">
-                    <div>Stipendio: <b>€${stip.toFixed(2)}</b></div>
-                    <div>Totale Spese Fisse: <b>-€${fisse.toFixed(2)}</b></div>
-                    <hr>
-                    <div style="font-size:1.1rem"><b>Netto Disponibile: €${nettoDisp.toFixed(2)}</b></div>
-                </div>
-                <div class="card">
-                    <div>Totale Spese Variabili: <b>-€${vari.toFixed(2)}</b></div>
-                </div>
-                <div class="summary-box res-real">
-                    <div style="font-size:1.2rem"><b>Residuo Reale: €${finale.toFixed(2)}</b></div>
-                </div>`;
-        }
-
-        function getMonthIndex(m) {
-            const mo = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
-            return mo.indexOf(m);
-        }
-
-        function renderChart() {
-            const ctx = document.getElementById('chartCanvas').getContext('2d');
-            const mo = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
-            const currentYear = new Date().getFullYear();
-            
-            const dataS = mo.map(m => db.s.find(x => x.m === m && x.a == currentYear)?.v || 0);
-            const dataU = mo.map((m, idx) => {
-                const v = db.v.filter(x => x.m === m && x.a == currentYear).reduce((a, b) => a + b.v, 0);
-                const f = db.f.filter(x => {
-                    const dataRif = new Date(currentYear, idx, 15);
-                    return dataRif >= new Date(x.da) && dataRif <= new Date(x.a);
-                }).reduce((a, b) => a + b.v, 0);
-                return v + f;
-            });
-
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: mo.map(m => m.substring(0,3)),
-                    datasets: [
-                        { label: 'Entrate', data: dataS, borderColor: '#27ae60', tension: 0.3 },
-                        { label: 'Uscite', data: dataU, borderColor: '#e74c3c', tension: 0.3 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        function exportData() { document.getElementById('backData').value = JSON.stringify(db); }
-        function importData() { 
-            const raw = document.getElementById('backData').value;
-            if(raw) { db = JSON.parse(raw); save(); alert("Dati caricati!"); showTab('home'); }
-        }
-        function pulisciTutto() {
-            if(confirm("Sei sicuro? Cancellerai tutto il database!")) {
-                db = { s: [], v: [], f: [] }; save(); alert("Database svuotato!"); showTab('setup');
-            }
-        }
-
-        window.onload = () => showTab('home');
-    </script>
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
+</script>
 </body>
 </html>
