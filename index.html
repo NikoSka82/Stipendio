@@ -51,9 +51,12 @@
         <input type="text" id="sn" placeholder="Causale"><input type="number" id="sv" placeholder="Importo €"><button class="btn btn-red" onclick="addV()">➕ AGGIUNGI SPESA</button>
     </div>
     <div id="tot-uscita" class="tot-mese"></div>
-    <div id="fixed-header" class="header-click" onclick="toggleFixed()" style="display:none; margin-bottom:0;"><span>📌 SPESE FISSE</span><span>▼</span></div>
-    <div id="list-f" style="display:none; background: rgba(52, 152, 219, 0.08); padding: 10px; border-radius: 0 0 8px 8px; border: 1px solid #34495e;"></div>
-    <div id="list-v" style="margin-top:10px;"></div>
+    
+    <div id="fixed-header" class="header-click" onclick="toggleFixed()" style="display:none; margin-bottom:5px;"><span>📌 SPESE FISSE</span><span>▼</span></div>
+    <div id="list-f" style="display:none; background: rgba(52, 152, 219, 0.08); padding: 10px; border-radius: 0 0 8px 8px; border: 1px solid #34495e; margin-bottom:10px;"></div>
+    
+    <div id="variable-header" class="header-click" onclick="toggleVariable()" style="display:none; margin-bottom:0; background: rgba(231, 76, 60, 0.1); border-left-color: var(--red);"><span>🛒 SPESE VARIABILI</span><span>▼</span></div>
+    <div id="list-v" style="display:none;"></div>
 </div>
 
 <div id="archivio" class="page">
@@ -137,17 +140,28 @@
     }
 
     function addV() { const v=parseFloat(document.getElementById('sv').value)||0, n=document.getElementById('sn').value, m=document.getElementById('sv-m').value, a=document.getElementById('sv-a').value; if(v>0) { db.v.push({v, n, m, a, id:Date.now()}); up(); renderV(); } }
+    
     function renderV() {
         const yr = parseInt(document.getElementById('sv-a').value), selM = document.getElementById('sv-m').value, mtIdx = mesiArr.indexOf(selM);
-        let tot = 0; let htmlV = db.v.filter(x=>x.a==yr && x.m==selM).map(x=>{ tot += x.v; return `<div class="card row-item"><span>${x.n}: <b>€${x.v.toFixed(2)}</b></span><button class="del-btn" onclick="delItem('v', ${x.id})">🗑️</button></div>`; }).join('');
-        let htmlF = ""; let countF = 0; let idsF = []; 
-        db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, mtIdx, 2); if(c>=s && c<=e) { tot+=f.v; countF++; idsF.push(f.id); htmlF+=`<div class="card row-item" style="border-left-color: var(--accent);"><div><span>📌 ${f.n}: <b>€${f.v.toFixed(2)}</b></span><span class="label-fissa">${f.da} / ${f.a}</span></div><button class="del-btn" onclick="delItem('f', ${f.id})">🗑️</button></div>`; }});
+        let totV = 0; 
+        let filteredV = db.v.filter(x=>x.a==yr && x.m==selM);
+        let htmlV = filteredV.map(x=>{ totV += x.v; return `<div class="card row-item"><span>${x.n}: <b>€${x.v.toFixed(2)}</b></span><button class="del-btn" onclick="delItem('v', ${x.id})">🗑️</button></div>`; }).join('');
+        
+        let htmlF = ""; let totF = 0; let countF = 0; let idsF = []; 
+        db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, mtIdx, 2); if(c>=s && c<=e) { totF+=f.v; countF++; idsF.push(f.id); htmlF+=`<div class="card row-item" style="border-left-color: var(--accent);"><div><span>📌 ${f.n}: <b>€${f.v.toFixed(2)}</b></span><span class="label-fissa">${f.da} / ${f.a}</span></div><button class="del-btn" onclick="delItem('f', ${f.id})">🗑️</button></div>`; }});
+        
         document.getElementById('list-v').innerHTML = htmlV; 
         document.getElementById('list-f').innerHTML = countF > 0 ? `<button class="btn btn-red" onclick="delMultipleF([${idsF}])">🗑️ SVUOTA FISSE</button>` + htmlF : htmlF;
-        document.getElementById('fixed-header').style.display = countF>0?'flex':'none'; document.getElementById('tot-uscita').innerText = "Totale Mese: € "+tot.toFixed(2);
+        
+        document.getElementById('fixed-header').style.display = countF>0?'flex':'none'; 
+        document.getElementById('variable-header').style.display = filteredV.length>0?'flex':'none';
+        
+        document.getElementById('tot-uscita').innerText = "Totale Mese: € "+(totV+totF).toFixed(2);
     }
+    
     function delMultipleF(ids) { if(confirm("Eliminare fisse?")) { db.f = db.f.filter(f => !ids.includes(f.id)); up(); renderV(); }}
     function toggleFixed() { const e=document.getElementById('list-f'); e.style.display=e.style.display==='block'?'none':'block'; }
+    function toggleVariable() { const e=document.getElementById('list-v'); e.style.display=e.style.display==='block'?'none':'block'; }
 
     function renderB() {
         const yr = document.getElementById('b-a').value, selM = document.getElementById('b-m').value, mtIdx = mesiArr.indexOf(selM);
@@ -155,19 +169,18 @@
         let uscM_V = db.v.filter(x => x.m === selM && x.a === yr).reduce((a,b) => a+b.v, 0);
         let uscM_F = 0; db.f.forEach(f => { const s=new Date(f.da+"T00:00:00"), e=new Date(f.a+"T23:59:59"), c=new Date(yr, mtIdx, 2); if(c>=s && c<=e) uscM_F += f.v; });
         const totUM = uscM_V + uscM_F;
-        const diffEntFisse = entM - uscM_F;
 
         document.getElementById('b-res').innerHTML = `
             <div class="card" style="border-left-color: #f1c40f;">
                 <b>DETTAGLIO RAPIDO ${selM.toUpperCase()}</b><br>
                 Entrate: €${entM.toLocaleString('it-IT', {minimumFractionDigits: 2})}<br>
-                Spese Fisse: €${uscM_F.toLocaleString('it-IT', {minimumFractionDigits: 2})}<br>
+                Totale Spese Fisse: €${uscM_F.toLocaleString('it-IT', {minimumFractionDigits: 2})}<br>
                 <hr>
-                <b>NETTO DISPONIBILE: €${diffEntFisse.toLocaleString('it-IT', {minimumFractionDigits: 2})}</b>
+                <b>NETTO DISPONIBILE: €${(entM - uscM_F).toLocaleString('it-IT', {minimumFractionDigits: 2})}</b>
             </div>
             <div class="card" style="border-left-color: var(--green);">
                 <b>BILANCIO FINALE</b><br>
-                Uscite Variabili: €${uscM_V.toLocaleString('it-IT', {minimumFractionDigits: 2})}<br>
+                Totale Spese Variabili: €${uscM_V.toLocaleString('it-IT', {minimumFractionDigits: 2})}<br>
                 <hr>
                 RESIDUO REALE: <b>€${(entM-totUM).toLocaleString('it-IT', {minimumFractionDigits: 2})}</b>
             </div>`;
